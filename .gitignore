@@ -4,3 +4,6 @@ bin
 include
 lib
 pyvenv.cfg
+.env
+share/*
+DiscordManimatorBackup.py
