@@ -25,6 +25,8 @@ bot = commands.Bot(
     case_insensitive=False
 )
 
+
+
 @bot.event
 async def on_ready():
     await bot.change_presence(activity=discord.Game(name='The Waiting Game'))
@@ -35,25 +37,38 @@ async def on_ready():
 async def mhelp(ctx):
     await ctx.send(
             '''A Simple Manim Rendering Bot.
-            Use the !manimate command to render short and simple Manim scripts.
-            Code must be properly formatted, and indented.
-            Tags supported:
-                -w,-s,-i,-t,-a,-n,-r,-c
-                --write_to_movie, --save_last_frame,
-                --save_as_gif,--transparent,--write_all
-            Ex:
-            !manimate -l
-            ```py
-            ```
-            ''')
+            
+Use the !manimate command to render short and simple Manim scripts.
+Code must be properly formatted, and indented.
+Note that you can't animate through DM's
+            
+Tags supported:
+```
+    -w,-s,-i,-t,-a,-n,-r,-c
+    --write_to_movie, --save_last_frame,
+    --save_as_gif,--transparent,--write_all
+```
+Ex:
+```
+!manimate
+\`\`\`py
+def construct(self):
+    self.play(ReplacementTransform(Square(),Circle()))
+\`\`\`
+```
+''')
 
 @bot.command()
+@commands.guild_only()
 async def manimate(ctx,*,arg):
-    name=ctx.author.mention
+    mention=ctx.author.mention
+    name=ctx.author.name
     async with ctx.typing():
         try:
             res_tag="480"
-            tagstring=re.search(r"(-.*)?^```(.*)```$",arg,flags=re.DOTALL|re.M).group(1)
+            tagstring=""
+            if re.search(r"(-.*)?^```(.*)```$",arg,flags=re.DOTALL|re.M).group(1):
+                tagstring+=re.search(r"(-.*)?^```(.*)```$",arg,flags=re.DOTALL|re.M).group(1)
             
             if tagstring != None:
                 tags=shlex.split(tagstring)
@@ -118,17 +133,18 @@ class test(Scene):
                     pass
 
         except Exception as error:
-            await ctx.send(str(name)+" Couldn't parse your code... Sorry!"+"\n```"+str(error)+"```")
+            await ctx.send(str(mention)+" Couldn't parse your code... Sorry!" + "\n```"+str(error)+"```")
             script=None
 
         if bool(script):
             try:
-                open("TempManim/temporary.py","w+").write(script)
+                open("TempManim/temporary"+name+".py","w+").write(script)
             except Exception as error:
-                await ctx.send(str(name)+" Couldn't write your code to an internal file... Sorry!"+"\n```"+str(error)+"```")
+                await ctx.send(str(mention)+" Couldn't write your code to an internal file... Sorry!") #+"\n```"+str(error)+"```")
 
-            cmd="timeout 180 python3 /root/manim/manim.py /root/manim/TempManim/temporary.py --media_dir /root/manim/TempManim -l " + tagstring
-            
+            cmd="timeout 180 python3 /root/manim/manim.py /root/manim/TempManim/temporary"+name+".py --media_dir /root/manim/TempManim -l " + tagstring
+            name=ctx.author.name
+            mention=ctx.author.mention
             try:
                 dockerclient.containers.run(
                         image="manimimage",
@@ -136,20 +152,19 @@ class test(Scene):
                         mounts=[ Mount(target="/root/manim/TempManim",source="TempManim")], 
                         command=cmd)
             except Exception as error:
-                await ctx.send(str(name)+" Manim couldn't render your file... Sorry!"+"\n```"+str(error)+"```")
+                await ctx.send(str(mention)+" Manim couldn't render your file... Sorry!"+"\n```"+str(error)+"```")
             
-            filepath="/root/ManimatorEnv/TempManim/videos/temporary/images/"+scenename+".png" if "-s" in tags else "/root/ManimatorEnv/TempManim/videos/temporary/"+res_tag+"p15/"+scenename+".mp4"
+            filepath="/root/ManimatorEnv/TempManim/videos/temporary"+name+"/images/"+scenename+".png" if "-s" in tags else "/root/ManimatorEnv/TempManim/videos/temporary"+name+"/"+res_tag+"p15/"+scenename+".mp4"
 
             
             try:
-                await ctx.send(str(name)+" Here you go:",file=discord.File(filepath))
+                await ctx.send(str(mention)+" Here you go:",file=discord.File(filepath))
             except Error as error:
-                await ctx.send(str(name)+" Couldn't send you your video... Sorry!"+"\n```"+str(error)+"```")
-           
-            os.remove("TempManim/temporary.py")
+                await ctx.send(str(mention)+" Couldn't send you your video... Sorry!")#+"\n```"+str(error)+"```")
+            os.remove("TempManim/temporary"+name+".py")
+
         shutil.rmtree("TempManim/Tex")
         shutil.rmtree("TempManim/texts")
         shutil.rmtree("TempManim/videos")
         shutil.rmtree("TempManim/__pycache__")
-
 bot.run(TOKEN, bot=True, reconnect=True)
