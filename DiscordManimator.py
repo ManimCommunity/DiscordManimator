@@ -56,9 +56,15 @@ async def manimate(ctx, *, arg):
         header, *body = arg.split('\n')
 
         cli_flags = header.split()
-        allowed_flags = ["-i", "-s", "-t"]
+        allowed_flags = [
+            "-i", "--save_as_gif",
+            "-s", "--save_last_frame",
+            "-t", "--transparent"
+        ]
         if not all([flag in allowed_flags for flag in cli_flags]):
-            await ctx.reply("You cannot pass CLI flags other than `-i`, `-s`, `-t`.")
+            await ctx.reply("You cannot pass CLI flags other than "
+                            "`-i` (`--save_as_gif`), `-s` (`--save_last_frame`), "
+                            "`-t` (`--transparent`).")
             return
         else:
             cli_flags = ' '.join(cli_flags)
