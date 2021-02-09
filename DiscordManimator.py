@@ -33,7 +33,7 @@ Code **must** be properly formatted and indented. Note that you can't animate th
 
 Supported tags:
 ```
-    -t, -i, -s
+    -t, --transparent, -i, --save_as_gif, -s, --save_last_frame
 ```
 Example:
 ```
