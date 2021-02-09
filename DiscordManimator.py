@@ -1,23 +1,18 @@
-import os
-import subprocess
-import shutil
-from dotenv import load_dotenv
-
-import re
-import shlex
-
-import list_imports
-
 import discord
-from discord.ext import commands
-
 import docker
-from docker.types import Mount
+import os
+import re
+import shutil
+import tempfile
 
-dockerclient=docker.from_env()
+from discord.ext import commands
+from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
+
+dockerclient = docker.from_env()
 
 bot = commands.Bot(
     command_prefix="!",
@@ -25,146 +20,110 @@ bot = commands.Bot(
     case_insensitive=False
 )
 
-
-
 @bot.event
 async def on_ready():
     await bot.change_presence(activity=discord.Game(name='The Waiting Game'))
-    print(f'Logged in as {bot.user.name}')  # Print the name of the bot logged in.
+    print(f'Logged in as {bot.user.name}')
     return
 
 @bot.command()
 async def mhelp(ctx):
-    await ctx.send(
-            '''A Simple Manim Rendering Bot.
-            
-Use the !manimate command to render short and simple Manim scripts.
-Code must be properly formatted, and indented.
-Note that you can't animate through DM's
-            
-Tags supported:
+    await ctx.send("""A simple Manim rendering bot.
+
+Use the `!manimate` command to render short and simple Manim scripts.
+Code **must** be properly formatted and indented. Note that you can't animate through DM's.
+
+Supported tags:
 ```
-    -w,-s,-i,-t,-a,-n,-r,-c
-    --write_to_movie, --save_last_frame,
-    --save_as_gif,--transparent,--write_all
+    -t, -i, -s
 ```
-Ex:
+Example:
 ```
-!manimate
+!manimate -s
 \`\`\`py
 def construct(self):
-    self.play(ReplacementTransform(Square(),Circle()))
+    self.play(ReplacementTransform(Square(), Circle()))
 \`\`\`
 ```
-''')
+""")
 
 @bot.command()
 @commands.guild_only()
-async def manimate(ctx,*,arg):
-    mention=ctx.author.mention
-    name=ctx.author.name
+async def manimate(ctx, *, arg):
     async with ctx.typing():
-        try:
-            res_tag="480"
-            tagstring=""
-            if re.search(r"(-.*)?^```(.*)```$",arg,flags=re.DOTALL|re.M).group(1):
-                tagstring+=re.search(r"(-.*)?^```(.*)```$",arg,flags=re.DOTALL|re.M).group(1)
-            
-            if tagstring != None:
-                tags=shlex.split(tagstring)
-                valid_tags=[
-                        "-w","-write_to_movie",
-                        "-s","-save_last_frame",
-                        "-l","--low_quality",
-                        "-i","--save_as_gif",
-                        "-t","--transparent",
-                        "-a","--write_all",
-                        "-n",
-                        "-r",
-                        "-c"
-                        ]
-                for i in range(0,len(tags)):
-                        tag=tags[i]
-                        if tag in ["-n","-c"]:
-                            tags[i]+=" "+tags[i+1]
-                        elif tag=="-r":
-                            reso=tags[i+1]
-                            res_tag=""
-                            res_l= [int(v) for v in reso.split(",")]
-                            if res_l[0]>1280 or res_l[1]>720:
-                                res_tag="480"
-                                tags[i]+=' "480,854"'
-                            else:
-                                tags[i]+=" "+tags[i+1]
-                                res_tag=str(res_l[0])
-                        else:
-                            pass
+        if arg.startswith('```'): # empty header
+            arg = '\n' + arg
+        header, *body = arg.split('\n')
 
-                for tag in tags:
-                    if tag.startswith(tuple(valid_tags))==False:
-                        tags.remove(tag)
+        cli_flags = header.split()
+        allowed_flags = ["-i", "-s", "-t"]
+        if not all([flag in allowed_flags for flag in cli_flags]):
+            await ctx.reply("You cannot pass CLI flags other than `-i`, `-s`, `-t`.")
+            return
+        else:
+            cli_flags = ' '.join(cli_flags)
 
-                tagstring=" ".join(tags)
-            else:
-                tagstring=""
+        body = '\n'.join(body).strip()
 
-            script=re.search(r"(-.*)?^```(.*)```$",arg,flags=re.DOTALL|re.M).group(2)
-            
-            if script.startswith("python"):
-                script=script[6:]
-            elif script.startswith("py"):
-                script=script[2:]
-            
-            script=script.strip()
+        if not (body.count('```') == 2
+                and body.startswith('```')
+                and body.endswith('```')):
+            await ctx.reply(
+                'Your message is not properly formatted. '
+                'Your code has to be written in a code block, like so:\n'
+                '\\`\\`\\`py\nyour code here\n\\`\\`\\`'
+            )
+            return
 
-            if script.startswith("def"):            
-                script="""from manimlib.imports import *
-class test(Scene):
-    """ +"\n    ".join(re.findall('(?:"[^"]*"|.)+|(?!\Z)',script))
-            
-            scenename=str(re.search(r"^class (.*) ?\(.*?$",script,flags=re.M).group(1)).rstrip()
+        if body.startswith('```python'):
+            script = body[9:-3]
+        elif body.startswith('```py'):
+            script = body[5:-3]
+        else:
+            script = body[3:-3]
+        script = script.strip()
 
-            imports = list_imports.parse(script)
+        # for convenience: allow construct-only:
+        if script.startswith('def construct(self):'):
+            script = ['class Manimation(Scene):'] + ["    " + line for line in script.split("\n")]
+        else:
+            script = script.split("\n")
 
-            for package in imports:
-                if package not in ["manimlib.imports","manimlib.constants","numpy","scipy"]:
-                    raise Exception("Your code imports system modules. Can't have that happening!")
-                else:
-                    pass
+        script = ["from manim import *"] + script
 
-        except Exception as error:
-            await ctx.send(str(mention)+" Couldn't parse your code... Sorry!" + "\n```"+str(error)+"```")
-            script=None
+        # write code to temporary file (ideally in temporary directory)
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            scriptfile = Path(tmpdirname) / 'script.py'
+            with open(scriptfile, 'w') as f:
+                f.write('\n'.join(script))
+            try: # now it's getting serious: get docker involved
+                container_stderr = dockerclient.containers.run(
+                    image="manimcommunity/manim:stable",
+                    volumes={tmpdirname: {'bind': '/manim/', 'mode': 'rw'}},
+                    command=f"timeout 120 manim /manim/script.py -qm -o scriptoutput {cli_flags}",
+                    stderr=True,
+                    stdout=False,
+                    remove=True
+                )
+                if container_stderr:
+                    await ctx.reply("Something went wrong, here is "
+                                    "what Manim reports:\n"
+                                    f"```\n{container_stderr.decode('utf-8')}\n```")
+                    return
 
-        if bool(script):
+            except Exception as e:
+                await ctx.reply(f"Something went wrong: ```{e}```")
+                raise e
+
             try:
-                open("TempManim/temporary"+name+".py","w+").write(script)
-            except Exception as error:
-                await ctx.send(str(mention)+" Couldn't write your code to an internal file... Sorry!") #+"\n```"+str(error)+"```")
+                [outfilepath] = Path(tmpdirname).rglob('scriptoutput.*')
+                await ctx.reply("Here you go:", file=discord.File(outfilepath))
+            except Exception as e:
+                await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
 
-            cmd="timeout 180 python3 /root/manim/manim.py /root/manim/TempManim/temporary"+name+".py --media_dir /root/manim/TempManim -l " + tagstring
-            name=ctx.author.name
-            mention=ctx.author.mention
-            try:
-                dockerclient.containers.run(
-                        image="manimimage",
-                        auto_remove=True, 
-                        mounts=[ Mount(target="/root/manim/TempManim",source="TempManim")], 
-                        command=cmd)
-            except Exception as error:
-                await ctx.send(str(mention)+" Manim couldn't render your file... Sorry!"+"\n```"+str(error)+"```")
-            
-            filepath="/root/ManimatorEnv/TempManim/videos/temporary"+name+"/images/"+scenename+".png" if "-s" in tags else "/root/ManimatorEnv/TempManim/videos/temporary"+name+"/"+res_tag+"p15/"+scenename+".mp4"
+            return
 
-            
-            try:
-                await ctx.send(str(mention)+" Here you go:",file=discord.File(filepath))
-            except Error as error:
-                await ctx.send(str(mention)+" Couldn't send you your video... Sorry!")#+"\n```"+str(error)+"```")
-            os.remove("TempManim/temporary"+name+".py")
+    return
 
-        shutil.rmtree("TempManim/Tex")
-        shutil.rmtree("TempManim/texts")
-        shutil.rmtree("TempManim/videos")
-        shutil.rmtree("TempManim/__pycache__")
+
 bot.run(TOKEN, bot=True, reconnect=True)
