@@ -1,8 +1,6 @@
 import discord
 import docker
 import os
-import re
-import shutil
 import tempfile
 
 from discord.ext import commands
