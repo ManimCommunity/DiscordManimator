@@ -144,7 +144,7 @@ async def manimate(ctx, *, arg):
                 except TimeoutError:
                     reply.remove_reaction("\U0001F5D1")
                 else:
-                    await msg.delete()
+                    await reply.delete()
 
             except Exception as e:
                 await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
