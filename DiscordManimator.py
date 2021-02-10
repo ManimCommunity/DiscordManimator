@@ -122,7 +122,20 @@ async def manimate(ctx, *, arg):
 
             try:
                 [outfilepath] = Path(tmpdirname).rglob('scriptoutput.*')
-                await ctx.reply("Here you go:", file=discord.File(outfilepath))
+                reply = await ctx.reply("Here you go:", file=discord.File(outfilepath))
+                
+                reply.add_reaction("\U0001F5D1") # Trashcan emoji
+
+                def check(reaction, user):
+                    return str(reaction.emoji) == '🗑️' and user == ctx.author
+                
+                try:
+                    reaction, user = await reply.wait_for('reaction_add', check=check,timeout = 60.0)
+                except TimeoutError:
+                    reply.remove_reaction("\U0001F5D1")
+                else:
+                    await msg.delete()
+
             except Exception as e:
                 await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
 
