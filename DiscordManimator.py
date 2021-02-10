@@ -137,8 +137,6 @@ async def manimate(ctx, *, arg):
                 await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
                 raise e
 
-            return
-
     if reply:
         await reply.add_reaction("\U0001F5D1") # Trashcan emoji
 
