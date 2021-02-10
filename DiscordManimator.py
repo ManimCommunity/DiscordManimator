@@ -2,6 +2,7 @@ import discord
 import docker
 import os
 import tempfile
+import re
 
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -79,12 +80,11 @@ async def manimate(ctx, *, arg):
             )
             return
 
-        if body.startswith('```python'):
-            script = body[9:-3]
-        elif body.startswith('```py'):
-            script = body[5:-3]
-        else:
-            script = body[3:-3]
+        script=re.search(
+            pattern = r"```(?:py)?(?:thon)?(.*)```",
+            string = script,
+            flags=re.DOTALL
+            ).group(1)
         script = script.strip()
 
         # for convenience: allow construct-only:
