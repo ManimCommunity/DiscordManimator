@@ -1,3 +1,4 @@
+import asyncio
 import discord
 import docker
 import os
@@ -144,8 +145,8 @@ async def manimate(ctx, *, arg):
             return str(reaction.emoji) == '\U0001F5D1' and user == ctx.author
 
         try:
-            reaction, user = await bot.wait_for('reaction_add', check=check,timeout = 60.0)
-        except TimeoutError:
+            reaction, user = await bot.wait_for('reaction_add', check=check, timeout=60.0)
+        except asyncio.TimeoutError:
             await reply.remove_reaction("\U0001F5D1")
         else:
             await reply.delete()
