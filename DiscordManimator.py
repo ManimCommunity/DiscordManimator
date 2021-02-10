@@ -71,9 +71,7 @@ async def manimate(ctx, *, arg):
 
         body = '\n'.join(body).strip()
 
-        if not (body.count('```') == 2
-                and body.startswith('```')
-                and body.endswith('```')):
+        if not (body.count('```') == 2:
             await ctx.reply(
                 'Your message is not properly formatted. '
                 'Your code has to be written in a code block, like so:\n'
