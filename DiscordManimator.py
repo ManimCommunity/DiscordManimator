@@ -140,7 +140,7 @@ async def manimate(ctx, *, arg):
                     return str(reaction.emoji) == '🗑️' and user == ctx.author
                 
                 try:
-                    reaction, user = await reply.wait_for('reaction_add', check=check,timeout = 60.0)
+                    reaction, user = await bot.wait_for('reaction_add', check=check,timeout = 60.0)
                 except TimeoutError:
                     reply.remove_reaction("\U0001F5D1")
                 else:
