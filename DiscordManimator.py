@@ -83,7 +83,7 @@ async def manimate(ctx, *, arg):
 
         script=re.search(
             pattern = r"```(?:py)?(?:thon)?(.*)```",
-            string = script,
+            string = body,
             flags=re.DOTALL
             ).group(1)
         script = script.strip()
