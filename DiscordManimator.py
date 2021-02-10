@@ -147,7 +147,7 @@ async def manimate(ctx, *, arg):
         try:
             reaction, user = await bot.wait_for('reaction_add', check=check, timeout=60.0)
         except asyncio.TimeoutError:
-            await reply.remove_reaction("\U0001F5D1")
+            await reply.remove_reaction("\U0001F5D1", bot.user)
         else:
             await reply.delete()
 
