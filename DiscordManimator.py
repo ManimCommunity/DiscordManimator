@@ -7,6 +7,7 @@ import re
 from discord.ext import commands
 from dotenv import load_dotenv
 from pathlib import Path
+from io import BytesIO
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -111,9 +112,18 @@ async def manimate(ctx, *, arg):
                     remove=True
                 )
                 if container_stderr:
-                    await ctx.reply("Something went wrong, here is "
-                                    "what Manim reports:\n"
-                                    f"```\n{container_stderr.decode('utf-8')}\n```")
+                    if len(container_stderr.decode('utf-8')) <= 1200:
+                        await ctx.reply("Something went wrong, here is "
+                                        "what Manim reports:\n"
+                                        f"```\n{container_stderr.decode('utf-8')}\n```")
+                    else:
+                        await ctx.reply("Something went wrong, here is "
+                                        "what Manim reports:\n",
+                                        file = discord.File(
+                                            fp=BytesIO(container_stderr),
+                                            filename="Error.log"
+                                            )
+                                        )
                     return
 
             except Exception as e:
