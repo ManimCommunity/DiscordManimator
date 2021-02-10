@@ -134,7 +134,7 @@ async def manimate(ctx, *, arg):
                 [outfilepath] = Path(tmpdirname).rglob('scriptoutput.*')
                 reply = await ctx.reply("Here you go:", file=discord.File(outfilepath))
                 
-                reply.add_reaction("\U0001F5D1") # Trashcan emoji
+                await reply.add_reaction("\U0001F5D1") # Trashcan emoji
 
                 def check(reaction, user):
                     return str(reaction.emoji) == '🗑️' and user == ctx.author
