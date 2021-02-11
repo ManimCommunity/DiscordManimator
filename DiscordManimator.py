@@ -4,11 +4,11 @@ import docker
 import os
 import tempfile
 import re
+import io
 
 from discord.ext import commands
 from dotenv import load_dotenv
 from pathlib import Path
-from io import BytesIO
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -122,7 +122,7 @@ async def manimate(ctx, *, arg):
                             "Something went wrong, here is "
                             "what Manim reports:\n",
                             file=discord.File(
-                                fp=BytesIO(container_stderr),
+                                fp=io.BytesIO(container_stderr),
                                 filename="Error.log",
                             ),
                         )
