@@ -98,7 +98,7 @@ async def manimate(ctx, *, arg):
         # write code to temporary file (ideally in temporary directory)
         with tempfile.TemporaryDirectory() as tmpdirname:
             scriptfile = Path(tmpdirname) / 'script.py'
-            with open(scriptfile, 'w') as f:
+            with open(scriptfile, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(script))
             try: # now it's getting serious: get docker involved
                 container_stderr = dockerclient.containers.run(
