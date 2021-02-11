@@ -83,8 +83,8 @@ async def manimate(ctx, *, arg):
         script=re.search(
             pattern = r"```(?:py)?(?:thon)?(.*)```",
             string = body,
-            flags=re.DOTALL
-            ).group(1)
+            flags=re.DOTALL,
+        ).group(1)
         script = script.strip()
 
         # for convenience: allow construct-only:
@@ -112,17 +112,20 @@ async def manimate(ctx, *, arg):
                 )
                 if container_stderr:
                     if len(container_stderr.decode('utf-8')) <= 1200:
-                        await ctx.reply("Something went wrong, here is "
-                                        "what Manim reports:\n"
-                                        f"```\n{container_stderr.decode('utf-8')}\n```")
+                        await ctx.reply(
+                            "Something went wrong, here is "
+                            "what Manim reports:\n"
+                            f"```\n{container_stderr.decode('utf-8')}\n```"
+                        )
                     else:
-                        await ctx.reply("Something went wrong, here is "
-                                        "what Manim reports:\n",
-                                        file = discord.File(
-                                            fp=BytesIO(container_stderr),
-                                            filename="Error.log"
-                                            )
-                                        )
+                        await ctx.reply(
+                            "Something went wrong, here is "
+                            "what Manim reports:\n",
+                            file=discord.File(
+                                fp=BytesIO(container_stderr),
+                                filename="Error.log",
+                            ),
+                        )
                     return
 
             except Exception as e:
