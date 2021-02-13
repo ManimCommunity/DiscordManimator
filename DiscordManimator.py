@@ -1,7 +1,10 @@
+import asyncio
 import discord
 import docker
 import os
 import tempfile
+import re
+import io
 
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -48,6 +51,7 @@ def construct(self):
 @bot.command()
 @commands.guild_only()
 async def manimate(ctx, *, arg):
+    reply = None
     async with ctx.typing():
         if arg.startswith('```'): # empty header
             arg = '\n' + arg
@@ -69,9 +73,7 @@ async def manimate(ctx, *, arg):
 
         body = '\n'.join(body).strip()
 
-        if not (body.count('```') == 2
-                and body.startswith('```')
-                and body.endswith('```')):
+        if body.count('```') != 2:
             await ctx.reply(
                 'Your message is not properly formatted. '
                 'Your code has to be written in a code block, like so:\n'
@@ -79,12 +81,11 @@ async def manimate(ctx, *, arg):
             )
             return
 
-        if body.startswith('```python'):
-            script = body[9:-3]
-        elif body.startswith('```py'):
-            script = body[5:-3]
-        else:
-            script = body[3:-3]
+        script=re.search(
+            pattern = r"```(?:py)?(?:thon)?(.*)```",
+            string = body,
+            flags=re.DOTALL,
+        ).group(1)
         script = script.strip()
 
         # for convenience: allow construct-only:
@@ -104,29 +105,53 @@ async def manimate(ctx, *, arg):
                 container_stderr = dockerclient.containers.run(
                     image="manimcommunity/manim:stable",
                     volumes={tmpdirname: {'bind': '/manim/', 'mode': 'rw'}},
-                    command=f"timeout 120 manim /manim/script.py -qm -o scriptoutput {cli_flags}",
+                    command=f"timeout 120 manim /manim/script.py -qm --disable_caching -o scriptoutput {cli_flags}",
                     user=os.getuid(),
                     stderr=True,
                     stdout=False,
                     remove=True
                 )
                 if container_stderr:
-                    await ctx.reply("Something went wrong, here is "
-                                    "what Manim reports:\n"
-                                    f"```\n{container_stderr.decode('utf-8')}\n```")
+                    if len(container_stderr.decode('utf-8')) <= 1200:
+                        await ctx.reply(
+                            "Something went wrong, here is "
+                            "what Manim reports:\n"
+                            f"```\n{container_stderr.decode('utf-8')}\n```"
+                        )
+                    else:
+                        await ctx.reply(
+                            "Something went wrong, here is "
+                            "what Manim reports:\n",
+                            file=discord.File(
+                                fp=io.BytesIO(container_stderr),
+                                filename="Error.log",
+                            ),
+                        )
                     return
 
             except Exception as e:
                 await ctx.reply(f"Something went wrong: ```{e}```")
                 raise e
-
             try:
                 [outfilepath] = Path(tmpdirname).rglob('scriptoutput.*')
-                await ctx.reply("Here you go:", file=discord.File(outfilepath))
             except Exception as e:
                 await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
+                raise e
+            else:
+                reply = await ctx.reply("Here you go:", file=discord.File(outfilepath))
 
-            return
+    if reply:
+        await reply.add_reaction("\U0001F5D1") # Trashcan emoji
+
+        def check(reaction, user):
+            return str(reaction.emoji) == '\U0001F5D1' and user == ctx.author
+
+        try:
+            reaction, user = await bot.wait_for('reaction_add', check=check, timeout=60.0)
+        except asyncio.TimeoutError:
+            await reply.remove_reaction("\U0001F5D1", bot.user)
+        else:
+            await reply.delete()
 
     return
 
