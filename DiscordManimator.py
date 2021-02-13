@@ -51,6 +51,7 @@ def construct(self):
 @bot.command()
 @commands.guild_only()
 async def manimate(ctx, *, arg):
+    reply = None
     async with ctx.typing():
         if arg.startswith('```'): # empty header
             arg = '\n' + arg
@@ -131,15 +132,13 @@ async def manimate(ctx, *, arg):
             except Exception as e:
                 await ctx.reply(f"Something went wrong: ```{e}```")
                 raise e
-
             try:
-                reply = None
                 [outfilepath] = Path(tmpdirname).rglob('scriptoutput.*')
-                reply = await ctx.reply("Here you go:", file=discord.File(outfilepath))
-
             except Exception as e:
                 await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
                 raise e
+            else:
+                reply = await ctx.reply("Here you go:", file=discord.File(outfilepath))
 
     if reply:
         await reply.add_reaction("\U0001F5D1") # Trashcan emoji
