@@ -132,7 +132,6 @@ async def manimate(ctx, *, arg):
             except Exception as e:
                 await ctx.reply(f"Something went wrong: ```{e}```")
                 raise e
-            
             try:
                 [outfilepath] = Path(tmpdirname).rglob('scriptoutput.*')
             except Exception as e:
