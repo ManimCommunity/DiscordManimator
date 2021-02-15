@@ -64,9 +64,10 @@ async def manimate(ctx, *, arg):
             "-t", "--transparent"
         ]
         if not all([flag in allowed_flags for flag in cli_flags]):
-            await ctx.reply("You cannot pass CLI flags other than "
+            reply = await ctx.reply("You cannot pass CLI flags other than "
                             "`-i` (`--save_as_gif`), `-s` (`--save_last_frame`), "
                             "`-t` (`--transparent`).")
+            await react_and_wait(reply)
             return
         else:
             cli_flags = ' '.join(cli_flags)
@@ -74,11 +75,12 @@ async def manimate(ctx, *, arg):
         body = '\n'.join(body).strip()
 
         if body.count('```') != 2:
-            await ctx.reply(
+            reply = await ctx.reply(
                 'Your message is not properly formatted. '
                 'Your code has to be written in a code block, like so:\n'
                 '\\`\\`\\`py\nyour code here\n\\`\\`\\`'
             )
+            await react_and_wait(reply)
             return
 
         script=re.search(
@@ -113,13 +115,13 @@ async def manimate(ctx, *, arg):
                 )
                 if container_stderr:
                     if len(container_stderr.decode('utf-8')) <= 1200:
-                        await ctx.reply(
+                        reply = await ctx.reply(
                             "Something went wrong, here is "
                             "what Manim reports:\n"
                             f"```\n{container_stderr.decode('utf-8')}\n```"
                         )
                     else:
-                        await ctx.reply(
+                        reply = await ctx.reply(
                             "Something went wrong, here is "
                             "what Manim reports:\n",
                             file=discord.File(
@@ -127,20 +129,24 @@ async def manimate(ctx, *, arg):
                                 filename="Error.log",
                             ),
                         )
+                    await react_and_wait(reply)
                     return
 
             except Exception as e:
-                await ctx.reply(f"Something went wrong: ```{e}```")
+                reply = await ctx.reply(f"Something went wrong: ```{e}```")
+                await react_and_wait(reply)
                 raise e
             try:
                 [outfilepath] = Path(tmpdirname).rglob('scriptoutput.*')
             except Exception as e:
-                await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
+                reply = await ctx.reply("Something went wrong: no (unique) output file was produced. :cry:")
+                await react_and_wait(reply)
                 raise e
             else:
                 reply = await ctx.reply("Here you go:", file=discord.File(outfilepath))
+                await react_and_wait(reply)
 
-    if reply:
+    async def react_and_wait(reply):
         await reply.add_reaction("\U0001F5D1") # Trashcan emoji
 
         def check(reaction, user):
