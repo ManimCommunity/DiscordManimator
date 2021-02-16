@@ -51,6 +51,20 @@ def construct(self):
 @bot.command()
 @commands.guild_only()
 async def manimate(ctx, *, arg):
+
+    async def react_and_wait(reply):
+        await reply.add_reaction("\U0001F5D1") # Trashcan emoji
+
+        def check(reaction, user):
+            return str(reaction.emoji) == '\U0001F5D1' and user == ctx.author
+
+        try:
+            reaction, user = await bot.wait_for('reaction_add', check=check, timeout=60.0)
+        except asyncio.TimeoutError:
+            await reply.remove_reaction("\U0001F5D1", bot.user)
+        else:
+            await reply.delete()
+
     reply = None
     async with ctx.typing():
         if arg.startswith('```'): # empty header
@@ -145,19 +159,6 @@ async def manimate(ctx, *, arg):
             else:
                 reply = await ctx.reply("Here you go:", file=discord.File(outfilepath))
                 await react_and_wait(reply)
-
-    async def react_and_wait(reply):
-        await reply.add_reaction("\U0001F5D1") # Trashcan emoji
-
-        def check(reaction, user):
-            return str(reaction.emoji) == '\U0001F5D1' and user == ctx.author
-
-        try:
-            reaction, user = await bot.wait_for('reaction_add', check=check, timeout=60.0)
-        except asyncio.TimeoutError:
-            await reply.remove_reaction("\U0001F5D1", bot.user)
-        else:
-            await reply.delete()
 
     return
 
