@@ -106,7 +106,7 @@ async def manimate(ctx, *, arg):
                 container_stderr = dockerclient.containers.run(
                     image="manimcommunity/manim:stable",
                     volumes={tmpdirname: {'bind': '/manim/', 'mode': 'rw'}},
-                    command=f"timeout 120 manim /manim/script.py -qm --disable_caching --progress_bar False -o scriptoutput {cli_flags}",
+                    command=f"timeout 120 manim -qm --disable_caching --progress_bar=none -o scriptoutput {cli_flags} /manim/script.py",
                     user=os.getuid(),
                     stderr=True,
                     stdout=False,
