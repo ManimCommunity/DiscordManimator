@@ -50,6 +50,13 @@ def construct(self):
 
 @bot.command()
 @commands.guild_only()
+async def m(ctx, *, arg): # alias for manimate
+    manimate(ctx, *, arg)
+    
+    
+
+@bot.command()
+@commands.guild_only()
 async def manimate(ctx, *, arg):
     reply = None
     async with ctx.typing():
