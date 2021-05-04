@@ -187,7 +187,7 @@ async def mdoc(ctx, *args):
     try:
         container_output = dockerclient.containers.run(
             image="manimcommunity/manim:stable",
-            command=f"""timeout 10 python -c "import manim; assert '{arg}' in dir(manim); print(manim.__version__ + '|' + manim.{arg}.__module__ + '.{arg}')" """,
+            command=f"""timeout 10 python -c "import manim; assert '{arg}' in dir(manim); print(manim.{arg}.__module__ + '.{arg}')" """,
             user=os.getuid(),
             stderr=False,
             stdout=True,
@@ -201,8 +201,8 @@ async def mdoc(ctx, *args):
         await ctx.reply(f"Something went wrong: ```{e.args[0]}```")
         return
     
-    version, fqname = container_output.decode("utf-8").strip().split("|")
-    url = f"https://docs.manim.community/en/v{version}/reference/{fqname}.html"
+    fqname = container_output.decode("utf-8").strip()
+    url = f"https://docs.manim.community/en/stable/reference/{fqname}.html"
     await ctx.reply(f"Here you go: {url}")
     return
     
