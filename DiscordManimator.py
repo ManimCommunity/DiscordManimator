@@ -48,7 +48,7 @@ def construct(self):
 ```
 """)
 
-@bot.command()
+@bot.command(aliases=['m'])
 @commands.guild_only()
 async def manimate(ctx, *, arg):
 
