@@ -50,4 +50,4 @@ class Mdoc(commands.Cog):
         return await ctx.reply(embed = embed, mention_author=False)                            
 
 def setup(bot):
-    bot.add_cog(Mdoc(bot))                            
+    bot.add_cog(Mdoc(bot))
