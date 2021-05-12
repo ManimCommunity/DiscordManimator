@@ -1,5 +1,4 @@
 PREFIX = '!'
 TOKEN = ''
-#Todo -- update class dictionary 
+#Todo -- update class dictionary
 BLACKLIST_COGS = {}
-
