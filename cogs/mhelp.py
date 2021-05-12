@@ -28,4 +28,4 @@ def construct(self):
 """)
 
 def setup(bot):
-    bot.add_cog(Help(bot))                            
+    bot.add_cog(Help(bot))
