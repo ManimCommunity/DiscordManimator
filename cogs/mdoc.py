@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-#from bs4 import BeautifulSoup
+import asyncio
 from requests_html import AsyncHTMLSession
 import nest_asyncio
 
@@ -23,6 +23,7 @@ class Mdoc(commands.Cog):
             ) 
         arg = args[0]
         self.res = []
+        pages = 0
         if not arg.isidentifier():
             return await ctx.reply(f"`{arg}` is not a valid identifier, no class or function can be named like that.")     
 
@@ -36,19 +37,46 @@ class Mdoc(commands.Cog):
             await response.html.arender(sleep=2)
             about = response.html.find('.search', first=True)
             a = about.find('li')
-            for i in range(2):
-                self.res.append(f'[`{a[i].text}`]({self.base_link + str(a[i].find("a")[0].text)})')                
-            
-        if self.res == []:            
-            self.title = '`No Results Found`'
-        else:
-            self.title = f'`Results for: {arg}`'
+            pages = len(a)
 
-        embed = discord.Embed(title = self.title, 
-                            description = '\n'.join(self.res),
-                            color = 0xe8e3e3)
+            if pages == []:            
+                self.title = '`No Results Found`'
+            else:
+                self.title = f'`Results for: {arg}`'
 
-        return await ctx.reply(embed = embed, mention_author=False)                            
+            for i in range(pages):
+                desc = f'[`{a[i].text}`]({self.base_link + str(a[i].find("a")[0].text).replace(" ", "%20")})'
+                embed = discord.Embed(title = self.title, 
+                                    description = desc,
+                                    color = 0xe8e3e3)
+                self.res.append(embed)                
+
+            cur_page = 0                
+            reply_embed = await ctx.reply(embed = self.res[cur_page], mention_author = False)
+            await reply_embed.add_reaction("◀️")
+            await reply_embed.add_reaction("▶️")
+
+            while True:
+                try:
+                    reaction, user = await self.bot.wait_for("reaction_add", 
+                                                        check = lambda reaction, user: user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"],
+                                                        timeout = 60)
+                    if str(reaction.emoji) == "▶️" and cur_page != pages:
+                        cur_page += 1
+                        await reply_embed.edit(embed = self.res[cur_page])
+                        await reply_embed.remove_reaction(reaction, ctx.author)
+
+                    elif str(reaction.emoji) == "◀️" and cur_page > 0:
+                        cur_page -= 1
+                        await reply_embed.edit(embed = self.res[cur_page])
+                        await reply_embed.remove_reaction(reaction, ctx.author)
+                    else:
+                        await reply_embed.remove_reaction(reaction, ctx.author)
+
+                except asyncio.TimeoutError:
+                    await reply_embed.clear_reactions()
+                                
+                              
 
 def setup(bot):
     bot.add_cog(Mdoc(bot))
