@@ -45,7 +45,7 @@ class Mdoc(commands.Cog):
                 self.title = f'`Results for: {arg}`'
 
             for i in range(pages):
-                desc = f'[`{a[i].text}`]({self.base_link + str(a[i].find("a")[0].text).replace(" ", "%20")})'
+                desc = f'[`{a[i].text}`]({str(list(a[i].find("a")[0].absolute_links)[0])})'
                 embed = discord.Embed(title = self.title, 
                                     description = desc,
                                     color = 0xe8e3e3)
