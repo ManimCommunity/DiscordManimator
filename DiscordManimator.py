@@ -104,7 +104,7 @@ async def manimate(ctx, *, arg):
             try: # now it's getting serious: get docker involved
                 reply_args = None
                 container_stderr = dockerclient.containers.run(
-                    image="manimcommunity/manim:stable",
+                    image="manimcommunity/DiscordManimator:latest",
                     volumes={tmpdirname: {'bind': '/manim/', 'mode': 'rw'}},
                     command=f"timeout 120 manim -qm --disable_caching --progress_bar=none -o scriptoutput {cli_flags} /manim/script.py",
                     user=os.getuid(),
