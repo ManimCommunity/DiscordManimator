@@ -189,7 +189,7 @@ async def mdocstring(ctx, *, arg):
                 class_name = res.group("classname")
             else:
                 return {
-                    "content": "Can't find a unique Class Name. Either pass it as an argument or use standart methods."
+                    "content": "Can't find a unique Class Name. Either pass it as an argument or use standard methods."
                 }
         dictargs = args.__dict__
         extra_args_lst = []
