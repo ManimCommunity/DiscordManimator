@@ -14,6 +14,7 @@ class Manimate(commands.Cog):
     def __init__(self, bot):        
         self.bot = bot
     
+    @commands.cooldown(2, 30, commands.BucketType.user)
     @commands.command(name = 'manimate', aliases = ['m'])
     @commands.guild_only()
     async def manimate(self, ctx, *, arg):
@@ -132,6 +133,13 @@ class Manimate(commands.Cog):
 
         await react_and_wait(reply)
         return
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, exc):
+        if isinstance(exc, commands.CommandOnCooldown):
+            embed = discord.Embed(title="`You are on a cooldown`", 
+                                description=f"`Please try again in {int(exc.retry_after)} seconds`")
+        await ctx.reply(embed=embed, mention_author=True)        
             
 
 def setup(bot):

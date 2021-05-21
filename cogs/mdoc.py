@@ -13,6 +13,7 @@ class Mdoc(commands.Cog):
         self.base_link = 'https://docs.manim.community/'
         self.res = []
 
+    @commands.cooldown(2, 30, commands.BucketType.user)
     @commands.command(name = 'mdoc')
     async def mdocs(self, ctx, *args):
         if len(args) == 0 or len(args) > 1:
@@ -35,6 +36,7 @@ class Mdoc(commands.Cog):
             return await ctx.send('`Failed to Establish Connection. Try again Later!`')            
         else:
             await response.html.arender(sleep=2)
+            await session.close()
             about = response.html.find('.search', first=True)
             a = about.find('li')
             pages = len(a)
@@ -49,8 +51,7 @@ class Mdoc(commands.Cog):
                 embed = discord.Embed(title = self.title, 
                                     description = desc,
                                     color = 0xe8e3e3)
-                self.res.append(embed)                
-
+                self.res.append(embed)                            
             cur_page = 0                
             reply_embed = await ctx.reply(embed = self.res[cur_page], mention_author = False)
             await reply_embed.add_reaction("◀️")
@@ -75,6 +76,13 @@ class Mdoc(commands.Cog):
 
                 except asyncio.TimeoutError:
                     await reply_embed.clear_reactions()
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, exc):
+        if isinstance(exc, commands.CommandOnCooldown):
+            embed = discord.Embed(title="`You are on a cooldown`", 
+                                description=f"`Please try again in {int(exc.retry_after)} seconds`")
+        await ctx.reply(embed=embed, mention_author=True)        
                                 
                               
 
