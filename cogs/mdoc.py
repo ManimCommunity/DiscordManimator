@@ -56,11 +56,12 @@ class Mdoc(commands.Cog):
             reply_embed = await ctx.reply(embed = self.res[cur_page], mention_author = False)
             await reply_embed.add_reaction("◀️")
             await reply_embed.add_reaction("▶️")
+            await reply_embed.add_reaction("\U0001F5D1")
 
             while True:
                 try:
                     reaction, user = await self.bot.wait_for("reaction_add", 
-                                                        check = lambda reaction, user: user == ctx.author and str(reaction.emoji) in ["◀️", "▶️"],
+                                                        check = lambda reaction, user: user == ctx.author and str(reaction.emoji) in ["◀️", "▶️", "\U0001F5D1"],
                                                         timeout = 60)
                     if str(reaction.emoji) == "▶️" and cur_page != pages:
                         cur_page += 1
@@ -71,6 +72,9 @@ class Mdoc(commands.Cog):
                         cur_page -= 1
                         await reply_embed.edit(embed = self.res[cur_page])
                         await reply_embed.remove_reaction(reaction, ctx.author)
+
+                    elif str(reaction.emoji) == "\U0001F5D1":
+                        await reply_embed.delete()
                     else:
                         await reply_embed.remove_reaction(reaction, ctx.author)
 
@@ -82,7 +86,9 @@ class Mdoc(commands.Cog):
         if isinstance(exc, commands.CommandOnCooldown):
             embed = discord.Embed(title="`You are on a cooldown`", 
                                 description=f"`Please try again in {int(exc.retry_after)} seconds`")
-        await ctx.reply(embed=embed, mention_author=True)        
+            await ctx.reply(embed=embed, mention_author=True)  
+        else:
+            pass      
                                 
                               
 
