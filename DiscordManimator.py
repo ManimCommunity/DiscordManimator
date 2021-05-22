@@ -36,7 +36,7 @@ async def on_ready():
 @bot.command()
 async def mhelp(ctx):
     await ctx.send(
-        """A simple Manim rendering bot.
+        """A simple Manim rendering and utility bot.
 
 Use the `!manimate` command to render short and simple Manim scripts.
 Code **must** be properly formatted and indented. Note that you can't animate through DM's.
@@ -53,6 +53,8 @@ def construct(self):
     self.play(ReplacementTransform(Square(), Circle()))
 \`\`\`
 ```
+
+Also, check `!mdocstring -h` for information about `mdocstring` command.
 """
     )
 
@@ -67,8 +69,7 @@ async def mdocstring(ctx, *, arg):
     template = Template(
         textwrap.dedent(
             """\
-            .. manim:: ${CLASSNAME}
-                ${EXTRA_ARGS}
+            .. manim:: ${CLASSNAME} ${EXTRA_ARGS}
 
             ${CODEHERE}
             """
@@ -100,8 +101,18 @@ async def mdocstring(ctx, *, arg):
                     pass
                 return result
 
+            def _print_message(self, message, file=None):
+                # don't do anything, or else it will clutter
+                # logs.
+                pass
+
+            def print_help(self, file=None):
+                if file is None:
+                    return
+                file.write(self.format_help())
+
         parser = HandleErrArgumentParser(
-            prog="mdocstring",
+            prog="!mdocstring",
             description="Convert code-blocks to docs output.",
         )
         parser.add_argument(
@@ -159,7 +170,7 @@ async def mdocstring(ctx, *, arg):
             with io.StringIO() as f:
                 parser.print_help(f)
                 content = f.getvalue()
-            return {"content": get_formatted_code(content, "sh")}
+            return {"content": get_formatted_code(content, "")}
         if parser.error_message:
             return {"content": get_formatted_code(parser.error_message)}
         body = "\n".join(body).strip()
@@ -196,7 +207,6 @@ async def mdocstring(ctx, *, arg):
         dictargs.pop("class_name")
         for key, value in dictargs.items():
             if value != None and not isinstance(value, bool):
-                print(value)
                 if isinstance(value, list):
                     for n in range(len(value)):
                         if "," in value[n]:
@@ -208,7 +218,11 @@ async def mdocstring(ctx, *, arg):
             elif isinstance(value, bool):
                 if value is True:
                     extra_args_lst += [f":{key}:"]
-        extra_args = "\n    ".join(extra_args_lst)
+        if len(extra_args_lst) == 0:
+            extra_args = ""
+        else:
+            extra_args = "\n" + " " * 4
+            extra_args += "\n    ".join(extra_args_lst)
 
         # format using black
         max_line_length = 150
