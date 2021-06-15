@@ -12,13 +12,14 @@ from string import Template
 from discord.ext import commands
 from discord.ext.commands import bot
 
+def get_formatted_code(code: str, lang: str = ""):
+    return f"```{lang}\n{code}\n```"
+
 class Mdocstring(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def get_formatted_code(code: str, lang: str = ""):
-        return f"```{lang}\n{code}\n```"
-
+    @commands.cooldown(10, 30, commands.BucketType.user)
     @commands.command(name='mdocstring', aliases=["md"])
     @commands.guild_only()
     async def mdocstring(self, ctx, *, arg):
@@ -126,9 +127,9 @@ class Mdocstring(commands.Cog):
                 with io.StringIO() as f:
                     parser.print_help(f)
                     content = f.getvalue()
-                return {"content": self.get_formatted_code(content, "")}
+                return {"content": get_formatted_code(content, "")}
             if parser.error_message:
-                return {"content": self.get_formatted_code(parser.error_message)}
+                return {"content": get_formatted_code(parser.error_message)}
             body = "\n".join(body).strip()
             if body.count("```") != 2:
                 return {
@@ -193,19 +194,17 @@ class Mdocstring(commands.Cog):
                 CODEHERE=textwrap.indent(script, 4 * " "),
                 EXTRA_ARGS=extra_args,
             )
-            return {"content": self.get_formatted_code(output, "py")}
+            return {"content": get_formatted_code(output, "py")}
 
         reply_args = construct_reply(arg)
         await ctx.reply(**reply_args)
-        traceback.print_exc()
         return
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, exc):
         if isinstance(exc, commands.CommandOnCooldown):
             embed = discord.Embed(title="`You are on a cooldown`", 
-                                description=f"`Please try again in {int(exc.retry_after)} seconds`")
-        await ctx.reply(traceback.format_exc())    
+                                description=f"`Please try again in {int(exc.retry_after)} seconds`")   
 
 def setup(bot):
     bot.add_cog(Mdocstring(bot))

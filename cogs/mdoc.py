@@ -13,7 +13,7 @@ class Mdoc(commands.Cog):
         self.base_link = 'https://docs.manim.community/'
         self.res = []
 
-    @commands.cooldown(2, 30, commands.BucketType.user)
+    @commands.cooldown(10, 30, commands.BucketType.user)
     @commands.command(name = 'mdoc')
     async def mdocs(self, ctx, *args):
         if len(args) == 0 or len(args) > 1:
