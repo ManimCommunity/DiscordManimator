@@ -3,6 +3,7 @@ import asyncio
 import discord
 import config
 import os
+import traceback
 
 import black
 import discord
@@ -46,5 +47,6 @@ class Manim(commands.Bot):
 
 bot = Manim()
 bot.run(config.TOKEN, bot=True, reconnect=True)
+traceback.print_exc()
 
 

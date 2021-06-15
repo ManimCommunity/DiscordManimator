@@ -7,6 +7,7 @@ from string import Template
 
 import black
 import discord
+import traceback
 from string import Template
 from discord.ext import commands
 from discord.ext.commands import bot
@@ -17,7 +18,8 @@ class Mdocstring(commands.Cog):
 
     def get_formatted_code(code: str, lang: str = ""):
         return f"```{lang}\n{code}\n```"
-    @bot.command(aliases=["md"])
+
+    @commands.command(name='mdocstring', aliases=["md"])
     @commands.guild_only()
     async def mdocstring(self, ctx, *, arg):
         template = Template(
@@ -195,6 +197,15 @@ class Mdocstring(commands.Cog):
 
         reply_args = construct_reply(arg)
         await ctx.reply(**reply_args)
+        traceback.print_exc()
+        return
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, exc):
+        if isinstance(exc, commands.CommandOnCooldown):
+            embed = discord.Embed(title="`You are on a cooldown`", 
+                                description=f"`Please try again in {int(exc.retry_after)} seconds`")
+        await ctx.reply(traceback.format_exc())    
 
 def setup(bot):
     bot.add_cog(Mdocstring(bot))
