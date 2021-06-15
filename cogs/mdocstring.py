@@ -2,25 +2,26 @@ import argparse
 import io
 import re
 import textwrap
+import traceback
 from pathlib import Path
 from string import Template
 
 import black
 import discord
-import traceback
-from string import Template
 from discord.ext import commands
 from discord.ext.commands import bot
 
+
 def get_formatted_code(code: str, lang: str = ""):
     return f"```{lang}\n{code}\n```"
+
 
 class Mdocstring(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.cooldown(10, 30, commands.BucketType.user)
-    @commands.command(name='mdocstring', aliases=["md"])
+    @commands.command(name="mdocstring", aliases=["md"])
     @commands.guild_only()
     async def mdocstring(self, ctx, *, arg):
         template = Template(
@@ -203,8 +204,11 @@ class Mdocstring(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, exc):
         if isinstance(exc, commands.CommandOnCooldown):
-            embed = discord.Embed(title="`You are on a cooldown`", 
-                                description=f"`Please try again in {int(exc.retry_after)} seconds`")   
+            embed = discord.Embed(
+                title="`You are on a cooldown`",
+                description=f"`Please try again in {int(exc.retry_after)} seconds`",
+            )
+
 
 def setup(bot):
     bot.add_cog(Mdocstring(bot))
