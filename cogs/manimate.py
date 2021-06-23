@@ -16,7 +16,7 @@ class Manimate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.cooldown(10, 30, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(name="manimate", aliases=["m"])
     @commands.guild_only()
     async def manimate(self, ctx, *, arg):

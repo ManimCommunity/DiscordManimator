@@ -17,7 +17,7 @@ class Mdocstring(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.cooldown(10, 30, commands.BucketType.user)
+    @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="mdocstring", aliases=["md"])
     @commands.guild_only()
     async def mdocstring(self, ctx, *, arg):
