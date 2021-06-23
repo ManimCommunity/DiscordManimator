@@ -91,17 +91,6 @@ class Mdoc(commands.Cog):
                 except asyncio.TimeoutError:
                     await reply_embed.clear_reactions()
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, exc):
-        if isinstance(exc, commands.CommandOnCooldown):
-            embed = discord.Embed(
-                title="`You are on a cooldown`",
-                description=f"`Please try again in {int(exc.retry_after)} seconds`",
-            )
-            await ctx.reply(embed=embed, mention_author=True)
-        else:
-            pass
-
 
 def setup(bot):
     bot.add_cog(Mdoc(bot))

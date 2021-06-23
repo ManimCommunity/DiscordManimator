@@ -198,14 +198,6 @@ class Mdocstring(commands.Cog):
         await ctx.reply(**reply_args)
         return
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, exc):
-        if isinstance(exc, commands.CommandOnCooldown):
-            embed = discord.Embed(
-                title="`You are on a cooldown`",
-                description=f"`Please try again in {int(exc.retry_after)} seconds`",
-            )
-
 
 def setup(bot):
     bot.add_cog(Mdocstring(bot))
