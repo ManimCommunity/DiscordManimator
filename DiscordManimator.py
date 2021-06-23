@@ -7,7 +7,7 @@ from discord.ext import commands
 
 bot = commands.Bot(
     description="Manim Community Discord Bot",
-    activity=discord.Game("Animating with manim"),
+    activity=discord.Game("Animating with Manim"),
     help_command=None,
     command_prefix=config.PREFIX,
     case_insensitive=True,
