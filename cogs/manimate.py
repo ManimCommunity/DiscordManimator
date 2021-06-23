@@ -135,7 +135,7 @@ class Manimate(commands.Cog):
                 return str(reaction.emoji) == "\U0001F5D1" and user == ctx.author
 
             try:
-                reaction, user = await bot.wait_for(
+                reaction, user = await self.bot.wait_for(
                     "reaction_add", check=check, timeout=60.0
                 )
             except asyncio.TimeoutError:
@@ -157,7 +157,9 @@ class Manimate(commands.Cog):
                 title="`You are on a cooldown`",
                 description=f"`Please try again in {int(exc.retry_after)} seconds`",
             )
-        await ctx.reply(embed=embed, mention_author=True)
+            await ctx.reply(embed=embed, mention_author=True)
+        else:
+            pass
 
 
 def setup(bot):
