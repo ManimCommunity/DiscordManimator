@@ -2,14 +2,11 @@ import argparse
 import io
 import re
 import textwrap
-import traceback
-from pathlib import Path
 from string import Template
 
 import black
 import discord
 from discord.ext import commands
-from discord.ext.commands import bot
 
 
 def get_formatted_code(code: str, lang: str = ""):
@@ -164,7 +161,7 @@ class Mdocstring(commands.Cog):
             extra_args_lst = []
             dictargs.pop("class_name")
             for key, value in dictargs.items():
-                if value != None and not isinstance(value, bool):
+                if value is not None and not isinstance(value, bool):
                     if isinstance(value, list):
                         for n in range(len(value)):
                             if "," in value[n]:

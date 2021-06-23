@@ -139,7 +139,7 @@ class Manimate(commands.Cog):
                     "reaction_add", check=check, timeout=60.0
                 )
             except asyncio.TimeoutError:
-                await reply.remove_reaction("\U0001F5D1", bot.user)
+                await reply.remove_reaction("\U0001F5D1", self.bot.user)
             else:
                 await reply.delete()
 
