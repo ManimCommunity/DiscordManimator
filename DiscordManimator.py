@@ -1,47 +1,33 @@
-import argparse
-import asyncio
 import os
 import traceback
-from pathlib import Path
-
-import black
-import discord
-import docker
-from discord.ext import commands
 
 import config
+import discord
+from discord.ext import commands
+
+bot = commands.Bot(
+    description="Manim Community Discord Bot",
+    activity=discord.Game("Animating with Manim"),
+    help_command=None,
+    command_prefix=config.PREFIX,
+    case_insensitive=True,
+    strip_after_prefix=True,
+)
 
 
-class Manim(commands.Bot):
-    def __init__(self):
-        manim_intents = {
-            "guilds": True,
-            "members": True,
-            "messages": True,
-            "reactions": True,
-            "presences": True,
-        }
-        intents = discord.Intents(**manim_intents)
-        super().__init__(
-            command_prefix=config.PREFIX,
-            case_insensitive=False,
-            self_bot=False,
-            description="Manim Community Discord Bot",
-            intents=intents,
-            help_command=None,
-        )
-        for extension in os.listdir("cogs/"):
+@bot.event
+async def on_ready():
+    print(f"Logged in as {bot.user.name}")
+
+
+if __name__ == "__main__":
+    for extension in os.listdir("cogs/"):
+        if extension.endswith(".py"):
             try:
-                self.load_extension(f"cogs.{extension[:-3]}")
-            except:
-                print(f"{extension} couldn't be loaded")
+                bot.load_extension(f"cogs.{extension[:-3]}")
+            except Exception:
+                print(f"{extension} couldn't be loaded.")
+                traceback.print_exc()
+                print("")
 
-    async def on_ready(self):
-        await self.change_presence(activity=discord.Game(name="The Waiting Game"))
-        print(f"Logged in as {self.user.name}")
-        return
-
-
-bot = Manim()
-bot.run(config.TOKEN, bot=True, reconnect=True)
-traceback.print_exc()
+bot.run(config.TOKEN)
