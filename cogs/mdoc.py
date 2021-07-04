@@ -14,7 +14,7 @@ class Mdoc(commands.Cog):
         self.base_link = "https://docs.manim.community/"
         self.res = []
 
-    @commands.cooldown(10, 30, commands.BucketType.user)
+    @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="mdoc")
     async def mdocs(self, ctx, *args):
         if len(args) == 0 or len(args) > 1:
@@ -90,17 +90,6 @@ class Mdoc(commands.Cog):
 
                 except asyncio.TimeoutError:
                     await reply_embed.clear_reactions()
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, exc):
-        if isinstance(exc, commands.CommandOnCooldown):
-            embed = discord.Embed(
-                title="`You are on a cooldown`",
-                description=f"`Please try again in {int(exc.retry_after)} seconds`",
-            )
-            await ctx.reply(embed=embed, mention_author=True)
-        else:
-            pass
 
 
 def setup(bot):

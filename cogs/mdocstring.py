@@ -2,14 +2,11 @@ import argparse
 import io
 import re
 import textwrap
-import traceback
-from pathlib import Path
 from string import Template
 
 import black
 import discord
 from discord.ext import commands
-from discord.ext.commands import bot
 
 
 def get_formatted_code(code: str, lang: str = ""):
@@ -20,7 +17,7 @@ class Mdocstring(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.cooldown(10, 30, commands.BucketType.user)
+    @commands.cooldown(1, 3, commands.BucketType.user)
     @commands.command(name="mdocstring", aliases=["md"])
     @commands.guild_only()
     async def mdocstring(self, ctx, *, arg):
@@ -164,7 +161,7 @@ class Mdocstring(commands.Cog):
             extra_args_lst = []
             dictargs.pop("class_name")
             for key, value in dictargs.items():
-                if value != None and not isinstance(value, bool):
+                if value is not None and not isinstance(value, bool):
                     if isinstance(value, list):
                         for n in range(len(value)):
                             if "," in value[n]:
@@ -200,14 +197,6 @@ class Mdocstring(commands.Cog):
         reply_args = construct_reply(arg)
         await ctx.reply(**reply_args)
         return
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, exc):
-        if isinstance(exc, commands.CommandOnCooldown):
-            embed = discord.Embed(
-                title="`You are on a cooldown`",
-                description=f"`Please try again in {int(exc.retry_after)} seconds`",
-            )
 
 
 def setup(bot):

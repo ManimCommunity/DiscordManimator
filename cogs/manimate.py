@@ -16,7 +16,7 @@ class Manimate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.cooldown(10, 30, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(name="manimate", aliases=["m"])
     @commands.guild_only()
     async def manimate(self, ctx, *, arg):
@@ -139,7 +139,7 @@ class Manimate(commands.Cog):
                     "reaction_add", check=check, timeout=60.0
                 )
             except asyncio.TimeoutError:
-                await reply.remove_reaction("\U0001F5D1", bot.user)
+                await reply.remove_reaction("\U0001F5D1", self.bot.user)
             else:
                 await reply.delete()
 
@@ -149,17 +149,6 @@ class Manimate(commands.Cog):
 
         await react_and_wait(reply)
         return
-
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, exc):
-        if isinstance(exc, commands.CommandOnCooldown):
-            embed = discord.Embed(
-                title="`You are on a cooldown`",
-                description=f"`Please try again in {int(exc.retry_after)} seconds`",
-            )
-            await ctx.reply(embed=embed, mention_author=True)
-        else:
-            pass
 
 
 def setup(bot):
