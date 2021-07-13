@@ -11,6 +11,7 @@ python = "^3.7"
 python-dotenv = "^0.17"
 docker = "^5.0"
 black = {version = "^21.5b1", allow-prereleases = true}
+matplotlib = "^3.3.2"
 
 [tool.poetry.dev-dependencies]
 
