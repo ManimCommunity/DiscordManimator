@@ -225,7 +225,7 @@ async def mdocstring(ctx, *, arg):
             extra_args += "\n    ".join(extra_args_lst)
 
         # format using black
-        max_line_length = 150
+        max_line_length = 88
         mode = black.FileMode(line_length=max_line_length)
         try:
             script = black.format_str(script, mode=mode)
