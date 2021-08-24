@@ -1,4 +1,3 @@
-import discord
 import os
 import docker
 from discord.ext import commands
