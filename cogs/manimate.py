@@ -33,7 +33,9 @@ class Manimate(commands.Cog):
                 "--save_last_frame",
                 "-t",
                 "--transparent",
+                "--renderer=opengl"
             ]
+
             if not all([flag in allowed_flags for flag in cli_flags]):
                 reply_args = {
                     "content": "You cannot pass CLI flags other than "
@@ -41,8 +43,10 @@ class Manimate(commands.Cog):
                     "`-t` (`--transparent`)."
                 }
                 return reply_args
-            else:
-                cli_flags = " ".join(cli_flags)
+            if "--renderer=opengl" in cli_flags:
+                cli_flags.append("--write_to_movie")
+            cli_flags = " ".join(cli_flags)
+
 
             body = "\n".join(body).strip()
 
