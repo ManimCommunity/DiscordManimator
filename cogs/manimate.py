@@ -40,7 +40,7 @@ class Manimate(commands.Cog):
                 reply_args = {
                     "content": "You cannot pass CLI flags other than "
                     "`-i` (`--save_as_gif`), `-s` (`--save_last_frame`), "
-                    "`-t` (`--transparent`)."
+                    "`-t` (`--transparent`), or `--renderer=opengl`."
                 }
                 return reply_args
             if "--renderer=opengl" in cli_flags:
