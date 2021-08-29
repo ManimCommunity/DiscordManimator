@@ -24,7 +24,6 @@ class Msearch(commands.Cog):
                 "Remember to not add any spaces."
             )
         arg = args[0]
-
         if not arg.isidentifier():
             return await ctx.reply(
                 f"`{arg}` is not a valid identifier, no class or function can be named like that."
