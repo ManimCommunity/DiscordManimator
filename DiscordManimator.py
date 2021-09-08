@@ -5,6 +5,7 @@ import os
 import re
 import tempfile
 import textwrap
+import traceback
 from pathlib import Path
 from string import Template
 
@@ -314,27 +315,19 @@ async def manimate(ctx, *, arg):
                     stdout=False,
                     remove=True,
                 )
-                if container_stderr:
-                    if len(container_stderr.decode("utf-8")) <= 1200:
-                        reply_args = {
-                            "content": "Something went wrong, here is "
-                            "what Manim reports:\n"
-                            f"```\n{container_stderr.decode('utf-8')}\n```"
-                        }
-                    else:
-                        reply_args = {
-                            "content": "Something went wrong, here is "
-                            "what Manim reports:\n",
-                            "file": discord.File(
-                                fp=io.BytesIO(container_stderr),
-                                filename="Error.log",
-                            ),
-                        }
-
-                    return reply_args
 
             except Exception as e:
-                reply_args = {"content": f"Something went wrong: ```{e}```"}
+                if isinstance(e, docker.errors.ContainerError):
+                    tb = e.stderr
+                else:
+                    tb = str.encode(traceback.format_exc())
+                reply_args = {
+                    "content": f"Something went wrong, the error log is attached. :cry:",
+                    "file": discord.File(
+                                fp=io.BytesIO(tb),
+                                filename="error.log",
+                            ),
+                }
                 raise e
             finally:
                 if reply_args:
