@@ -5,13 +5,4 @@ A Manim Rendering Bot for Discord. Requires a working `docker` environment: the 
 
 ### Deploying the Bot
 
-After obtaining a Discord bot token, add a `.env` file containing the line
-```
-DISCORD_TOKEN=<insert bot token here>
-```
-to this directory. The bot is then started by running `python DiscordManimator.py`.
-
-
-
-
-
+After obtaining a Discord bot token, make a new file called config.py in the same directory by copying config_example.py. Edit the new config.py and add your token. The bot is then started by running `python DiscordManimator.py`.
