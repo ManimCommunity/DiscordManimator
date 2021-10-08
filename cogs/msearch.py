@@ -1,11 +1,8 @@
 import asyncio
 
 import discord
-import nest_asyncio
 from discord.ext import commands
 import requests
-
-nest_asyncio.apply()
 
 
 class Msearch(commands.Cog):
