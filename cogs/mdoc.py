@@ -1,8 +1,16 @@
 import os
-import docker
 from discord.ext import commands
 
-dockerclient = docker.from_env()
+# If you don't want to use docker, set NO_DOCKER to True
+# where-ever you define environment variables.
+if "NO_DOCKER" in os.environ:
+    import subprocess
+
+    NO_DOCKER = os.getenv("NO_DOCKER") == "True"
+else:
+    import docker
+
+    dockerclient = docker.from_env()
 
 class Mdoc(commands.Cog):
     def __init__(self, bot):
@@ -26,23 +34,36 @@ class Mdoc(commands.Cog):
             return
 
         try:
-            container_output = dockerclient.containers.run(
-                image="manimcommunity/manim:stable",
-                command=f"""timeout 10 python -c "import manim; assert '{arg}' in dir(manim); print(manim.{arg}.__module__ + '.{arg}')" """,
-                user=os.getuid(),
-                stderr=False,
-                stdout=True,
-                detach=False,
-                remove=True,
-            )
-        except docker.errors.ContainerError as e:
+            if NO_DOCKER:
+                errortype = Exception
+                proc = subprocess.run(
+                    f"""timeout 10 python -c "import manim; assert '{arg}' in dir(manim); print(manim.{arg}.__module__ + '.{arg}')" """,
+                    shell=True,
+                    stderr=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                )
+                err = proc.stderr.decode("utf-8")
+                if err:
+                    raise Exception(err)
+            else:
+                errortype = docker.errors.ContainerError
+                container_output = dockerclient.containers.run(
+                    image="manimcommunity/manim:stable",
+                    command=f"""timeout 10 python -c "import manim; assert '{arg}' in dir(manim); print(manim.{arg}.__module__ + '.{arg}')" """,
+                    user=os.getuid(),
+                    stderr=False,
+                    stdout=True,
+                    detach=False,
+                    remove=True,
+                )
+        except errortype as e:
             if "AssertionError" in e.args[0]:
                 await ctx.reply(f"I could not find `{arg}` in our documentation, sorry.")
                 return
             await ctx.reply(f"Something went wrong: ```{e.args[0]}```")
             return
 
-        fqname = container_output.decode("utf-8").strip().splitlines()[2]
+        fqname = (proc.stdout.decode("utf-8").strip().splitlines()[0] if NO_DOCKER else container_output.decode("utf-8").strip().splitlines()[2])
         url = f"https://docs.manim.community/en/stable/reference/{fqname}.html"
         await ctx.reply(f"Here you go: {url}")
         return

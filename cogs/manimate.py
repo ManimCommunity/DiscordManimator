@@ -6,11 +6,24 @@ import tempfile
 from pathlib import Path
 
 import discord
-import docker
 from discord.ext import commands
 
-dockerclient = docker.from_env()
+# If you don't want to use docker, set NO_DOCKER to True
+# where-ever you define environment variables.
+if "NO_DOCKER" in os.environ:
+    import subprocess
 
+    NO_DOCKER = os.getenv("NO_DOCKER") == "True"
+    # If you want to use manim-onlinetex, set USE_ONLINETEX to True
+    # whereever you define environment variables.
+    # If you want to use manim-onlinetex, set TEX_DIR to somewhere that won't be erased in a new manim.cfg
+    USE_ONLINETEX = (
+        os.getenv("USE_ONLINETEX") == "True" if "USE_ONLINETEX" in os.environ else False
+    )
+else:
+    import docker
+
+    dockerclient = docker.from_env()
 
 class Manimate(commands.Cog):
     def __init__(self, bot):
@@ -73,7 +86,7 @@ class Manimate(commands.Cog):
             else:
                 script = script.split("\n")
 
-            script = ["from manim import *"] + script
+            script = ["from manim import *", "from manim_onlinetex import *"] + script if USE_ONLINETEX else ["from manim import *"] + script
 
             # write code to temporary file (ideally in temporary directory)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -82,28 +95,36 @@ class Manimate(commands.Cog):
                     f.write("\n".join(script))
                 try:  # now it's getting serious: get docker involved
                     reply_args = None
-                    container_stderr = dockerclient.containers.run(
-                        image="manimcommunity/manim:stable",
-                        volumes={tmpdirname: {"bind": "/manim/", "mode": "rw"}},
-                        command=f"timeout 120 manim -qm --disable_caching --progress_bar=none -o scriptoutput {cli_flags} /manim/script.py",
-                        user=os.getuid(),
-                        stderr=True,
-                        stdout=False,
-                        remove=True,
-                    )
-                    if container_stderr:
-                        if len(container_stderr.decode("utf-8")) <= 1200:
+                    if NO_DOCKER:
+                        proc = subprocess.run(
+                            f"timeout 120 manim -ql --media_dir {tmpdirname} -o scriptoutput {'--config_file manim.cfg' if USE_ONLINETEX else ''} {cli_flags} {scriptfile}",
+                            shell=True,
+                            stderr=subprocess.PIPE,
+                        )
+                        manim_stderr = proc.stderr
+                    else:
+                        manim_stderr = dockerclient.containers.run(
+                            image="manimcommunity/manim:stable",
+                            volumes={tmpdirname: {"bind": "/manim/", "mode": "rw"}},
+                            command=f"timeout 120 manim -qm --disable_caching --progress_bar=none -o scriptoutput {cli_flags} /manim/script.py",
+                            user=os.getuid(),
+                            stderr=True,
+                            stdout=False,
+                            remove=True,
+                        )
+                    if manim_stderr:
+                        if len(manim_stderr.decode("utf-8")) <= 1200:
                             reply_args = {
                                 "content": "Something went wrong, here is "
                                 "what Manim reports:\n"
-                                f"```\n{container_stderr.decode('utf-8')}\n```"
+                                f"```\n{manim_stderr.decode('utf-8')}\n```"
                             }
                         else:
                             reply_args = {
                                 "content": "Something went wrong, here is "
                                 "what Manim reports:\n",
                                 "file": discord.File(
-                                    fp=io.BytesIO(container_stderr),
+                                    fp=io.BytesIO(manim_stderr),
                                     filename="Error.log",
                                 ),
                             }
