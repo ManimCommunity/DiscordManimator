@@ -3,7 +3,7 @@ import asyncio
 import discord
 import nest_asyncio
 from discord.ext import commands
-from requests_html import AsyncHTMLSession
+import requests
 
 nest_asyncio.apply()
 
@@ -24,42 +24,53 @@ class Msearch(commands.Cog):
                 "Remember to not add any spaces."
             )
         arg = args[0]
-        self.res = []
-        pages = 0
         if not arg.isidentifier():
             return await ctx.reply(
                 f"`{arg}` is not a valid identifier, no class or function can be named like that."
             )
 
-        query_url = f"https://docs.manim.community/en/stable/search.html?q={arg}&check_keywords=yes&area=default#"
+        query_url = f"https://docs.manim.community/_/api/v2/search/?q={arg}&project=manimce&version=stable&language=en"
         try:
-            session = AsyncHTMLSession()
-            response = await session.get(query_url)
+            req = requests.get(query_url)
+            if req.status_code != 200:
+                return await ctx.send("`Failed to query the documentation API. Try again later.`")
+
+            response = req.json()
         except:
-            return await ctx.send("`Failed to Establish Connection. Try again Later!`")
+            return await ctx.send("`Failed to establish connection. Try again later.`")
         else:
-            await response.html.arender(sleep=2)
-            await session.close()
-            about = response.html.find(".search", first=True)
-            a = about.find("li")
-            pages = len(a)
+            query_results = response["results"]
+            if not query_results:
+                embed = discord.Embed(title="No results found", color=0xE8E3E3)
+                await ctx.reply(embed=embed, mention_author=False)
+                return
+            
+            title = f"Results for `{arg}`"
+            embeds = []
 
-            if pages == []:
-                self.title = "`No Results Found`"
-            else:
-                self.title = f"`Results for: {arg}`"
-
-            for i in range(pages):
-                desc = (
-                    f'[`{a[i].text}`]({str(list(a[i].find("a")[0].absolute_links)[0])})'
-                )
+            for ind, result in enumerate(query_results):
                 embed = discord.Embed(
-                    title=self.title, description=desc, color=0xE8E3E3
+                    title=title + f" – {ind+1} / {len(query_results)}",
+                    color=0xE8E3E3
                 )
-                self.res.append(embed)
-            cur_page = 0
+                url = result['domain'] + result['path']
+                for itm in result['blocks']:
+                    itm_name = itm.get("name", None) or itm.get("title", None)
+                    itm_prefix = itm.get("role", "")
+                    itm_id = itm.get("id", "")
+                    if itm_prefix:
+                        itm_prefix = f"[{itm_prefix}] "
+                    embed.add_field(
+                        name=f"{itm_prefix} {itm_name}",
+                        value=f"[Go to Documentation]({url}#{itm_id})\n\n{itm['content'][:100]}...",
+                        inline=False,
+                    )
+
+                embeds.append(embed)
+
+            current_page = 0
             reply_embed = await ctx.reply(
-                embed=self.res[cur_page], mention_author=False
+                embed=embeds[current_page], mention_author=False
             )
             await reply_embed.add_reaction("◀️")
             await reply_embed.add_reaction("▶️")
@@ -73,14 +84,16 @@ class Msearch(commands.Cog):
                         and str(reaction.emoji) in ["◀️", "▶️", "\U0001F5D1"],
                         timeout=60,
                     )
-                    if str(reaction.emoji) == "▶️" and cur_page != pages:
-                        cur_page += 1
-                        await reply_embed.edit(embed=self.res[cur_page])
+                    if str(reaction.emoji) == "▶️":
+                        current_page += 1
+                        current_page = current_page % len(embeds)
+                        await reply_embed.edit(embed=embeds[current_page])
                         await reply_embed.remove_reaction(reaction, ctx.author)
 
-                    elif str(reaction.emoji) == "◀️" and cur_page > 0:
-                        cur_page -= 1
-                        await reply_embed.edit(embed=self.res[cur_page])
+                    elif str(reaction.emoji) == "◀️":
+                        current_page -= 1
+                        current_page = current_page % len(embeds)
+                        await reply_embed.edit(embed=embeds[current_page])
                         await reply_embed.remove_reaction(reaction, ctx.author)
 
                     elif str(reaction.emoji) == "\U0001F5D1":
