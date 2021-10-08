@@ -1,36 +1,33 @@
-import argparse
-import asyncio
-import io
 import os
+<<<<<<< HEAD
 import re
 import tempfile
 import textwrap
 import traceback
 from pathlib import Path
 from string import Template
+=======
+import traceback
+>>>>>>> refactor
 
-import black
+import config
 import discord
-import docker
 from discord.ext import commands
-from dotenv import load_dotenv
-
-load_dotenv()
-TOKEN = os.environ["DISCORD_TOKEN"]
-
-dockerclient = docker.from_env()
 
 bot = commands.Bot(
-    command_prefix="!",
-    description="Manim Community's Utility Bot.",
-    case_insensitive=False,
+    description="Manim Community Discord Bot",
+    activity=discord.Game("Animating with Manim"),
+    help_command=None,
+    command_prefix=config.PREFIX,
+    case_insensitive=True,
+    strip_after_prefix=True,
 )
 
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game(name="The Waiting Game"))
     print(f"Logged in as {bot.user.name}")
+<<<<<<< HEAD
     return
 
 
@@ -332,83 +329,18 @@ async def manimate(ctx, *, arg):
             finally:
                 if reply_args:
                     return reply_args
+=======
 
+>>>>>>> refactor
+
+if __name__ == "__main__":
+    for extension in os.listdir("cogs/"):
+        if extension.endswith(".py"):
             try:
-                [outfilepath] = Path(tmpdirname).rglob("scriptoutput.*")
-            except Exception as e:
-                reply_args = {
-                    "content": "Something went wrong: no (unique) output file was produced. :cry:"
-                }
-                raise e
-            else:
-                reply_args = {
-                    "content": "Here you go:",
-                    "file": discord.File(outfilepath),
-                }
-            finally:
-                return reply_args
+                bot.load_extension(f"cogs.{extension[:-3]}")
+            except Exception:
+                print(f"{extension} couldn't be loaded.")
+                traceback.print_exc()
+                print("")
 
-    async def react_and_wait(reply):
-        await reply.add_reaction("\U0001F5D1")  # Trashcan emoji
-
-        def check(reaction, user):
-            return str(reaction.emoji) == "\U0001F5D1" and user == ctx.author
-
-        try:
-            reaction, user = await bot.wait_for(
-                "reaction_add", check=check, timeout=60.0
-            )
-        except asyncio.TimeoutError:
-            await reply.remove_reaction("\U0001F5D1", bot.user)
-        else:
-            await reply.delete()
-
-    async with ctx.typing():
-        reply_args = construct_reply(arg)
-        reply = await ctx.reply(**reply_args)
-
-    await react_and_wait(reply)
-    return
-
-
-@bot.command()
-@commands.guild_only()
-async def mdoc(ctx, *args):
-    if len(args) == 0:
-        await ctx.reply(
-            "Pass some manim function or class and I will find the "
-            "corresponding documentation for you. Example: `!mdoc Square`"
-        )
-        return
-
-    arg = args[0]
-    if not arg.isidentifier():
-        await ctx.reply(
-            f"`{arg}` is not a valid identifier, no class or function can be named like that."
-        )
-        return
-
-    try:
-        container_output = dockerclient.containers.run(
-            image="manimcommunity/manim:stable",
-            command=f"""timeout 10 python -c "import manim; assert '{arg}' in dir(manim); print(manim.{arg}.__module__ + '.{arg}')" """,
-            user=os.getuid(),
-            stderr=False,
-            stdout=True,
-            detach=False,
-            remove=True,
-        )
-    except docker.errors.ContainerError as e:
-        if "AssertionError" in e.args[0]:
-            await ctx.reply(f"I could not find `{arg}` in our documentation, sorry.")
-            return
-        await ctx.reply(f"Something went wrong: ```{e.args[0]}```")
-        return
-
-    fqname = container_output.decode("utf-8").strip().splitlines()[2]
-    url = f"https://docs.manim.community/en/stable/reference/{fqname}.html"
-    await ctx.reply(f"Here you go: {url}")
-    return
-
-
-bot.run(TOKEN, bot=True, reconnect=True)
+bot.run(config.TOKEN)
