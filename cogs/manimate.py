@@ -3,6 +3,7 @@ import io
 import os
 import re
 import tempfile
+import traceback
 from pathlib import Path
 
 import discord
@@ -95,6 +96,7 @@ class Manimate(commands.Cog):
                     f.write("\n".join(script))
                 try:  # now it's getting serious: get docker involved
                     reply_args = None
+
                     if NO_DOCKER:
                         proc = subprocess.run(
                             f"timeout 120 manim -ql --media_dir {tmpdirname} -o scriptoutput {'--config_file manim.cfg' if USE_ONLINETEX else ''} {cli_flags} {scriptfile}",
@@ -132,7 +134,14 @@ class Manimate(commands.Cog):
                         return reply_args
 
                 except Exception as e:
-                    reply_args = {"content": f"Something went wrong: ```{e}```"}
+                    if isinstance(e, docker.errors.ContainerError):
+                        tb = e.stderr
+                    else:
+                        tb = str.encode(traceback.format_exc())
+                    reply_args = {
+                        "content": f"Something went wrong, the error log is attached. :cry:",
+                        "file": discord.File(fp=io.BytesIO(tb), filename="error.log"),
+                    }
                     raise e
                 finally:
                     if reply_args:
