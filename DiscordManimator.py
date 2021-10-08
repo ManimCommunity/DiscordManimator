@@ -5,6 +5,8 @@ import config
 import discord
 from discord.ext import commands
 
+from pathlib import Path
+
 bot = commands.Bot(
     description="Manim Community Discord Bot",
     activity=discord.Game("Animating with Manim"),
@@ -20,7 +22,7 @@ async def on_ready():
     print(f"Logged in as {bot.user.name}")
 
 if __name__ == "__main__":
-    for extension in os.listdir("cogs/"):
+    for extension in os.listdir(Path(__file__).parent/"cogs/"):
         if extension.endswith(".py"):
             try:
                 bot.load_extension(f"cogs.{extension[:-3]}")
