@@ -7,6 +7,20 @@ pyvenv.cfg
 .env
 share/*
 DiscordManimatorBackup.py
-.venv
-.vscode
 config.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+.floo
+.flooignore
+.vscode
+.vs
+
+
