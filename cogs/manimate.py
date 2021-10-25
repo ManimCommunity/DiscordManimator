@@ -34,14 +34,18 @@ class Manimate(commands.Cog):
                 "--save_last_frame",
                 "-t",
                 "--transparent",
-                "--renderer=opengl"
+                "--renderer=opengl",
+                "--use_projection_fill_shaders",
+                "--use_projection_stroke_shaders"
             ]
 
             if not all([flag in allowed_flags for flag in cli_flags]):
                 reply_args = {
                     "content": "You cannot pass CLI flags other than "
                     "`-i` (`--save_as_gif`), `-s` (`--save_last_frame`), "
-                    "`-t` (`--transparent`), or `--renderer=opengl`."
+                    "`-t` (`--transparent`), `--renderer=opengl`, "
+                    "`--use_projection_fill_shaders` or "
+                    "`--use_projection_stroke_shaders`."
                 }
                 return reply_args
             if "--renderer=opengl" in cli_flags:
