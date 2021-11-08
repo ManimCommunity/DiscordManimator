@@ -18,6 +18,10 @@ else:
 
     dockerclient = docker.from_env()
 
+class ManimError(ChildProcessError):
+    def __init__(self,traceback):
+        self.traceback = traceback
+
 class Manimate(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -99,7 +103,8 @@ class Manimate(commands.Cog):
                             shell=True,
                             stderr=subprocess.PIPE,
                         )
-                        manim_stderr = proc.stderr
+                        if proc.stderr:
+                            raise ManimError(traceback = proc.stderr)
                     else:
                         manim_stderr = dockerclient.containers.run(
                             image="manimcommunity/manim:stable",
@@ -110,34 +115,28 @@ class Manimate(commands.Cog):
                             stdout=False,
                             remove=True,
                         )
-                    if manim_stderr:
-                        if len(manim_stderr.decode("utf-8")) <= 1200:
-                            reply_args = {
-                                "content": "Something went wrong, here is "
-                                "what Manim reports:\n"
-                                f"```\n{manim_stderr.decode('utf-8')}\n```"
-                            }
-                        else:
-                            reply_args = {
-                                "content": "Something went wrong, here is "
-                                "what Manim reports:\n",
-                                "file": discord.File(
-                                    fp=io.BytesIO(manim_stderr),
-                                    filename="Error.log",
-                                ),
-                            }
-
-                        return reply_args
+                        if manim_stderr:
+                            raise ManimError(traceback = manim_stderr)
 
                 except Exception as e:
-                    if isinstance(e, docker.errors.ContainerError):
-                        tb = e.stderr
+                    if isinstance(e, ManimError):
+                        reply_args = {
+                            "content": "Something went wrong, here is "
+                            "what Manim reports:\n",
+                            "file": discord.File(
+                                fp=io.BytesIO(e.traceback),
+                                filename="Error.log",
+                            ),
+                        }
                     else:
-                        tb = str.encode(traceback.format_exc())
-                    reply_args = {
-                        "content": f"Something went wrong, the error log is attached. :cry:",
-                        "file": discord.File(fp=io.BytesIO(tb), filename="error.log"),
-                    }
+                        if isinstance(e, docker.errors.ContainerError):
+                            tb = e.stderr
+                        else:
+                            tb = str.encode(traceback.format_exc())
+                        reply_args = {
+                            "content": f"Something went wrong, the error log is attached. :cry:",
+                            "file": discord.File(fp=io.BytesIO(tb), filename="error.log"),
+                        }
                     raise e
                 finally:
                     if reply_args:
