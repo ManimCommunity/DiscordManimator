@@ -9,18 +9,10 @@ from pathlib import Path
 import discord
 from discord.ext import commands
 
-# If you don't want to use docker, set NO_DOCKER to True
-# where-ever you define environment variables.
-if "NO_DOCKER" in os.environ:
-    import subprocess
+import config
 
-    NO_DOCKER = os.getenv("NO_DOCKER") == "True"
-    # If you want to use manim-onlinetex, set USE_ONLINETEX to True
-    # whereever you define environment variables.
-    # If you want to use manim-onlinetex, set TEX_DIR to somewhere that won't be erased in a new manim.cfg
-    USE_ONLINETEX = (
-        os.getenv("USE_ONLINETEX") == "True" if "USE_ONLINETEX" in os.environ else False
-    )
+if config.NO_DOCKER:
+    import subprocess
 else:
     import docker
 
@@ -91,7 +83,7 @@ class Manimate(commands.Cog):
             else:
                 script = script.split("\n")
 
-            script = ["from manim import *", "from manim_onlinetex import *"] + script if USE_ONLINETEX else ["from manim import *"] + script
+            script = ["from manim import *", "from manim_onlinetex import *"] + script if config.USE_ONLINETEX else ["from manim import *"] + script
 
             # write code to temporary file (ideally in temporary directory)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -101,9 +93,9 @@ class Manimate(commands.Cog):
                 try:  # now it's getting serious: get docker involved
                     reply_args = None
 
-                    if NO_DOCKER:
+                    if config.NO_DOCKER:
                         proc = subprocess.run(
-                            f"timeout 120 manim -ql --media_dir {tmpdirname} -o scriptoutput {'--config_file manim.cfg' if USE_ONLINETEX else ''} {cli_flags} {scriptfile}",
+                            f"timeout manim -ql --media_dir {tmpdirname} -o scriptoutput {'--config_file manim.cfg' if config.USE_ONLINETEX else ''} {cli_flags} {scriptfile}",
                             shell=True,
                             stderr=subprocess.PIPE,
                         )

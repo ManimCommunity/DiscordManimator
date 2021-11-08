@@ -1,12 +1,9 @@
 import os
 from discord.ext import commands
+import config
 
-# If you don't want to use docker, set NO_DOCKER to True
-# where-ever you define environment variables.
-if "NO_DOCKER" in os.environ:
+if config.NO_DOCKER:
     import subprocess
-
-    NO_DOCKER = os.getenv("NO_DOCKER") == "True"
 else:
     import docker
 
@@ -34,7 +31,7 @@ class Mdoc(commands.Cog):
             return
 
         try:
-            if NO_DOCKER:
+            if config.NO_DOCKER:
                 errortype = Exception
                 proc = subprocess.run(
                     f"""timeout 10 python -c "import manim; assert '{arg}' in dir(manim); print(manim.{arg}.__module__ + '.{arg}')" """,
@@ -63,7 +60,7 @@ class Mdoc(commands.Cog):
             await ctx.reply(f"Something went wrong: ```{e.args[0]}```")
             return
 
-        fqname = (proc.stdout.decode("utf-8").strip().splitlines()[0] if NO_DOCKER else container_output.decode("utf-8").strip().splitlines()[2])
+        fqname = (proc.stdout.decode("utf-8").strip().splitlines()[0] if config.NO_DOCKER else container_output.decode("utf-8").strip().splitlines()[2])
         url = f"https://docs.manim.community/en/stable/reference/{fqname}.html"
         await ctx.reply(f"Here you go: {url}")
         return
