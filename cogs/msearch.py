@@ -1,11 +1,8 @@
 import asyncio
 
 import discord
-import nest_asyncio
 from discord.ext import commands
 import requests
-
-nest_asyncio.apply()
 
 
 class Msearch(commands.Cog):
@@ -98,6 +95,7 @@ class Msearch(commands.Cog):
 
                     elif str(reaction.emoji) == "\U0001F5D1":
                         await reply_embed.delete()
+                        return
                     else:
                         await reply_embed.remove_reaction(reaction, ctx.author)
 

@@ -9,3 +9,16 @@ share/*
 DiscordManimatorBackup.py
 config.py
 
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+.floo
+.flooignore
+.vscode
+.vs
