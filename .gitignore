@@ -22,3 +22,8 @@ venv.bak/
 .flooignore
 .vscode
 .vs
+
+# Manim Related
+
+manim.cfg
+Tex/

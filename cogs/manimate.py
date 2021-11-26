@@ -7,11 +7,20 @@ import traceback
 from pathlib import Path
 
 import discord
-import docker
 from discord.ext import commands
 
-dockerclient = docker.from_env()
+import config
 
+if config.NO_DOCKER:
+    import subprocess
+else:
+    import docker
+
+    dockerclient = docker.from_env()
+
+class ManimError(ChildProcessError):
+    def __init__(self,traceback):
+        self.traceback = traceback
 
 class Manimate(commands.Cog):
     def __init__(self, bot):
@@ -78,7 +87,10 @@ class Manimate(commands.Cog):
             else:
                 script = script.split("\n")
 
-            script = ["from manim import *"] + script
+            prescript = ["from manim import *"]
+            if config.USE_ONLINETEX:
+                prescript.append("from manim_onlinetex import *")
+            script = prescript + script
 
             # write code to temporary file (ideally in temporary directory)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -87,25 +99,47 @@ class Manimate(commands.Cog):
                     f.write("\n".join(script))
                 try:  # now it's getting serious: get docker involved
                     reply_args = None
-                    container_stderr = dockerclient.containers.run(
-                        image="manimcommunity/manim:stable",
-                        volumes={tmpdirname: {"bind": "/manim/", "mode": "rw"}},
-                        command=f"timeout 120 manim -qm --disable_caching --progress_bar=none -o scriptoutput {cli_flags} /manim/script.py",
-                        user=os.getuid(),
-                        stderr=True,
-                        stdout=False,
-                        remove=True,
-                    )
+
+                    if config.NO_DOCKER:
+                        proc = subprocess.run(
+                            f"timeout 120 manim -ql --media_dir {tmpdirname} -o scriptoutput {'--config_file manim.cfg' if config.USE_ONLINETEX else ''} {cli_flags} {scriptfile}",
+                            shell=True,
+                            stderr=subprocess.PIPE,
+                        )
+                        if proc.stderr:
+                            raise ManimError(traceback=proc.stderr)
+                    else:
+                        manim_stderr = dockerclient.containers.run(
+                            image="manimcommunity/manim:stable",
+                            volumes={tmpdirname: {"bind": "/manim/", "mode": "rw"}},
+                            command=f"timeout 120 manim -qm --disable_caching --progress_bar=none -o scriptoutput {cli_flags} /manim/script.py",
+                            user=os.getuid(),
+                            stderr=True,
+                            stdout=False,
+                            remove=True,
+                        )
+                        if manim_stderr:
+                            raise ManimError(traceback = manim_stderr)
 
                 except Exception as e:
-                    if isinstance(e, docker.errors.ContainerError):
-                        tb = e.stderr
+                    if isinstance(e, ManimError):
+                        reply_args = {
+                            "content": "Something went wrong, here is "
+                            "what Manim reports:\n",
+                            "file": discord.File(
+                                fp=io.BytesIO(e.traceback),
+                                filename="error.log",
+                            ),
+                        }
                     else:
-                        tb = str.encode(traceback.format_exc())
-                    reply_args = {
-                        "content": f"Something went wrong, the error log is attached. :cry:",
-                        "file": discord.File(fp=io.BytesIO(tb), filename="error.log"),
-                    }
+                        if isinstance(e, docker.errors.ContainerError):
+                            tb = e.stderr
+                        else:
+                            tb = str.encode(traceback.format_exc())
+                        reply_args = {
+                            "content": f"Something went wrong, the error log is attached. :cry:",
+                            "file": discord.File(fp=io.BytesIO(tb), filename="error.log"),
+                        }
                     raise e
                 finally:
                     if reply_args:
