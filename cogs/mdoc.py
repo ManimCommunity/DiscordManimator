@@ -60,7 +60,10 @@ class Mdoc(commands.Cog):
             await ctx.reply(f"Something went wrong: ```{e.args[0]}```")
             return
 
-        fqname = (proc.stdout.decode("utf-8").strip().splitlines()[0] if config.NO_DOCKER else container_output.decode("utf-8").strip().splitlines()[2])
+        if config.NO_DOCKER:
+            fqname = proc.stdout.decode("utf-8").strip().splitlines()[0]
+        else:
+            fqname = container_output.decode("utf-8").strip().splitlines()[2]
         url = f"https://docs.manim.community/en/stable/reference/{fqname}.html"
         await ctx.reply(f"Here you go: {url}")
         return

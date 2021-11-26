@@ -87,7 +87,10 @@ class Manimate(commands.Cog):
             else:
                 script = script.split("\n")
 
-            script = ["from manim import *", "from manim_onlinetex import *"] + script if config.USE_ONLINETEX else ["from manim import *"] + script
+            prescript = ["from manim import *"]
+            if config.USE_ONLINETEX:
+                prescript.append("from manim_onlinetex import *")
+            script = prescript + script
 
             # write code to temporary file (ideally in temporary directory)
             with tempfile.TemporaryDirectory() as tmpdirname:
@@ -99,12 +102,12 @@ class Manimate(commands.Cog):
 
                     if config.NO_DOCKER:
                         proc = subprocess.run(
-                            f"timeout manim -ql --media_dir {tmpdirname} -o scriptoutput {'--config_file manim.cfg' if config.USE_ONLINETEX else ''} {cli_flags} {scriptfile}",
+                            f"timeout 120 manim -ql --media_dir {tmpdirname} -o scriptoutput {'--config_file manim.cfg' if config.USE_ONLINETEX else ''} {cli_flags} {scriptfile}",
                             shell=True,
                             stderr=subprocess.PIPE,
                         )
                         if proc.stderr:
-                            raise ManimError(traceback = proc.stderr)
+                            raise ManimError(traceback=proc.stderr)
                     else:
                         manim_stderr = dockerclient.containers.run(
                             image="manimcommunity/manim:stable",
@@ -125,7 +128,7 @@ class Manimate(commands.Cog):
                             "what Manim reports:\n",
                             "file": discord.File(
                                 fp=io.BytesIO(e.traceback),
-                                filename="Error.log",
+                                filename="error.log",
                             ),
                         }
                     else:
