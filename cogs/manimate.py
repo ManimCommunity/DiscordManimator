@@ -38,7 +38,7 @@ class Manimate(commands.Cog):
             cli_flags = header.split()
             allowed_flags = [
                 "-i",
-                "--save_as_gif",
+                "--format=gif",
                 "-s",
                 "--save_last_frame",
                 "-t",
@@ -51,7 +51,7 @@ class Manimate(commands.Cog):
             if not all([flag in allowed_flags for flag in cli_flags]):
                 reply_args = {
                     "content": "You cannot pass CLI flags other than "
-                    "`-i` (`--save_as_gif`), `-s` (`--save_last_frame`), "
+                    "`-i` (`--format=gif`), `-s` (`--save_last_frame`), "
                     "`-t` (`--transparent`), `--renderer=opengl`, "
                     "`--use_projection_fill_shaders` or "
                     "`--use_projection_stroke_shaders`."
