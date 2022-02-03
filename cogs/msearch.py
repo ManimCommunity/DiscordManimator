@@ -17,7 +17,7 @@ class Msearch(commands.Cog):
         if len(args) == 0 or len(args) > 1:
             return await ctx.reply(
                 "Pass some manim function or class and I will find the "
-                "corresponding documentation for you. Example: `!msearch Square`"
+                "corresponding search results for you. Example: `!msearch Square`"
                 "Remember to not add any spaces."
             )
         arg = args[0]
