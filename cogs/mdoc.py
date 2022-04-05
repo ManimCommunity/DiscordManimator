@@ -1,4 +1,5 @@
 import os
+import re
 from discord.ext import commands
 import config
 
@@ -9,6 +10,8 @@ else:
 
     dockerclient = docker.from_env()
 
+validate_version = re.compile(r"latest|stable|v\d\.\d{1,2}\.\d")
+
 
 class Mdoc(commands.Cog):
     def __init__(self, bot):
@@ -16,7 +19,7 @@ class Mdoc(commands.Cog):
 
     @commands.command(name="mdoc")
     @commands.guild_only()
-    async def mdoc(self, ctx, args):
+    async def mdoc(self, ctx, *args):
         if len(args) == 0:
             await ctx.reply(
                 "Pass some manim function or class and I will find the "
@@ -24,13 +27,22 @@ class Mdoc(commands.Cog):
             )
             return
 
-        args = args.split(".")
+        arg = args[0].split(".")
 
-        object_or_class = args[0]
+        object_or_class = arg[0]
         try:
-            method_or_attribute = args[1]
+            method_or_attribute = arg[1]
         except IndexError:
             method_or_attribute = ""
+
+        try:
+            version = args[1]
+            if validate_version.search(version) is None:
+                await ctx.reply(f"Invalid version {version} provided")
+                return
+        except IndexError:
+            version = "stable"
+
 
         if not object_or_class.isidentifier():
             await ctx.reply(
@@ -97,7 +109,7 @@ class Mdoc(commands.Cog):
         else:
             fqname = container_output.decode("utf-8").strip().splitlines()[2]
 
-        url = f"https://docs.manim.community/en/stable/reference/{fqname}.html#{fqname}.{method_or_attribute}"
+        url = f"https://docs.manim.community/en/{version}/reference/{fqname}.html#{fqname}.{method_or_attribute}"
         await ctx.reply(f"Here you go: {url}")
         return
 
