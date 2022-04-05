@@ -74,7 +74,7 @@ class Mdoc(commands.Cog):
                 )
 
                 if method_or_attribute:
-                    method_absence = dockerclient.containers.run(
+                    dockerclient.containers.run(
                         image="manimcommunity/manim:stable",
                         command=f"""timeout 10 python -c "import manim; assert hasattr(manim.{object_or_class}, '{method_or_attribute}')" """,
                         user=os.getuid(),
