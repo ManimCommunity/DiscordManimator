@@ -15,7 +15,7 @@ Code **must** be properly formatted and indented. Note that you can't animate th
 
 Supported tags:
 ```
-    -t, --transparent, -i, --save_as_gif, -s, --save_last_frame
+    -i (--format=gif), -s (--save_last_frame), -t (--transparent), --renderer=opengl, --use_projection_fill_shaders, --use_projection_stroke_shaders
 ```
 Example:
 ```
