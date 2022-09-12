@@ -46,6 +46,7 @@ class RenderView(discord.ui.View):
                 interaction.message.reference.message_id
             )
             response = render_animation_snippet(code_message)
+            response.pop("cli_flags")
 
             button.label = "Render again"
             await interaction.followup.edit_message(
@@ -101,6 +102,9 @@ class SettingsModal(discord.ui.Modal, title='Change render settings'):
                 code_message,
                 cli_flags=self.CLI_flags.value
             )
+            cli_flags = response.pop("cli_flags")
+            if cli_flags:
+                response["content"] += f"\n\nPassed CLI flags: `{cli_flags}`"
             view = RenderView()
             view.children[0].label = "Render again"
             await interaction.followup.edit_message(
@@ -157,6 +161,7 @@ def render_animation_snippet(code_message, cli_flags=None) -> discord.File:
             if isinstance(e, ManimError):  # manim itself threw an error
                 reply_args = {
                     "content": "Something went wrong! :cry: Here is what Manim reports.",
+                    "cli_flags": cli_flags,
                     "attachments": [
                         discord.File(
                             fp=io.BytesIO(e.traceback),
@@ -173,6 +178,7 @@ def render_animation_snippet(code_message, cli_flags=None) -> discord.File:
                     tb = str.encode(traceback.format_exc())
                 reply_args = {
                     "content": f"Something went wrong, the error log is attached. :cry:",
+                    "cli_flags": cli_flags,
                     "attachments": [
                         discord.File(fp=io.BytesIO(tb), filename="error.log"),
                     ],
@@ -183,11 +189,13 @@ def render_animation_snippet(code_message, cli_flags=None) -> discord.File:
             [outfilepath] = Path(tmpdirname).rglob("scriptoutput.*")
         except Exception as e:
             reply_args = {
-                "content": "Something went wrong: no (unique) output file was produced. :cry:"
+                "content": "Something went wrong: no (unique) output file was produced. :cry:",
+                "cli_flags": cli_flags,
             }
         else:
             reply_args = {
                 "content": "Here you go!",
+                "cli_flags": cli_flags,
                 "attachments": [discord.File(outfilepath),],
             }
         finally:
