@@ -6,8 +6,8 @@ authors = ["Manim Community Developers"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
-"discord.py" = "^1.7"
+python = "^3.8"
+"discord.py" = "^2"
 python-dotenv = "^0.17"
 docker = "^5.0"
 black = {version = "^21.5b1", allow-prereleases = true}
