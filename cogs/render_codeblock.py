@@ -16,6 +16,9 @@ from pathlib import Path
 import docker
 dockerclient = docker.from_env()
 
+# time in seconds after which view (= button row) is removed
+VIEW_TIMEOUT = 120
+
 class RenderCodeblock(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__()
@@ -27,11 +30,13 @@ class RenderCodeblock(commands.Cog):
             return
 
         if extract_manim_snippets(message.content):
-            await message.reply(
+            view = RenderView(timeout=VIEW_TIMEOUT)
+            message = await message.reply(
                 "This message looks like it contains a Manim snippet, "
                 "do you want me to render it?",
-                view=RenderView()
+                view=view
             )
+            view.message = message
 
 
 class RenderView(discord.ui.View):
@@ -40,6 +45,9 @@ class RenderView(discord.ui.View):
         style=discord.ButtonStyle.blurple,
     )
     async def render(self, interaction: discord.Interaction, button: discord.ui.Button):
+        for child in self.children:
+            child.disabled = True
+        await self.message.edit(view=self)
         await interaction.response.defer()
         async with interaction.channel.typing():
             code_message = await interaction.channel.fetch_message(
@@ -49,6 +57,8 @@ class RenderView(discord.ui.View):
             response.pop("cli_flags")
 
             button.label = "Render again"
+            for child in self.children:
+                child.disabled = False
             await interaction.followup.edit_message(
                 message_id=interaction.message.id,
                 view=self,
@@ -76,6 +86,9 @@ class RenderView(discord.ui.View):
         button: discord.ui.Button,
     ):
         await interaction.message.delete()
+
+    async def on_timeout(self):
+        await self.message.edit(view=self.clear_items())
 
 
 class SettingsModal(discord.ui.Modal, title='Change render settings'):
@@ -105,13 +118,14 @@ class SettingsModal(discord.ui.Modal, title='Change render settings'):
             cli_flags = response.pop("cli_flags")
             if cli_flags:
                 response["content"] += f"\n\nPassed CLI flags: `{cli_flags}`"
-            view = RenderView()
+            view = RenderView(timeout=VIEW_TIMEOUT)
             view.children[0].label = "Render again"
-            await interaction.followup.edit_message(
+            message = await interaction.followup.edit_message(
                 message_id=interaction.message.id,
                 view=view,
                 **response
             )
+            view.message = message
 
 
 def extract_manim_snippets(msg) -> None | str:
