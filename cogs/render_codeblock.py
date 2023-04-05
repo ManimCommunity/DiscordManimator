@@ -129,7 +129,7 @@ class SettingsModal(discord.ui.Modal, title='Change render settings'):
 
 
 def extract_manim_snippets(msg) -> None | str:
-    pattern = re.compile(r"```(?:py|python)?([^`]*def construct[^`]*)```")
+    pattern = re.compile(r"```(?:python|py)?([^`]*def construct[^`]*)```")
     return pattern.findall(msg)
 
 def render_animation_snippet(code_message, cli_flags=None) -> discord.File:
