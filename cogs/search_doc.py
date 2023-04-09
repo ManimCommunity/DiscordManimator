@@ -45,18 +45,15 @@ class SearchDocumentation(commands.Cog):
                     content=f"No results found for `{query}`."
                 )
                 return
-            
+
             title = f"Documentation results for `{query}`"
             embeds = []
 
-            embed = discord.Embed(
-                title=title,
-                color=0xE8E3E3
-            )
+            embed = discord.Embed(title=title, color=0xE8E3E3)
 
             for ind, result in enumerate(query_results):
-                url = result['domain'] + result['path']
-                for itm in result['blocks']:
+                url = result["domain"] + result["path"]
+                for itm in result["blocks"]:
                     itm_name = itm.get("name", None) or itm.get("title", None)
                     itm_prefix = itm.get("role", "")
                     itm_id = itm.get("id", "")
@@ -73,6 +70,7 @@ class SearchDocumentation(commands.Cog):
                 break
 
             await interaction.followup.send(embed=embed)
+
 
 async def setup(bot: commands.Bot):
     """Entrypoint of loading the bot extension."""
