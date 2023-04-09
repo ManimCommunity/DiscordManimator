@@ -11,6 +11,7 @@ python = "^3.8"
 python-dotenv = "^0.17"
 docker = "^5.0"
 black = {version = "^21.5b1", allow-prereleases = true}
+aiodocker = "^0.21.0"
 
 [tool.poetry.dev-dependencies]
 

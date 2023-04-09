@@ -13,9 +13,7 @@ import config
 from discord.ext import commands
 from pathlib import Path
 
-import docker
-dockerclient = docker.from_env()
-
+import aiodocker
 # time in seconds after which view (= button row) is removed
 VIEW_TIMEOUT = 120
 
@@ -53,7 +51,7 @@ class RenderView(discord.ui.View):
             code_message = await interaction.channel.fetch_message(
                 interaction.message.reference.message_id
             )
-            response = render_animation_snippet(code_message)
+            response = await render_animation_snippet(code_message)
             response.pop("cli_flags")
 
             button.label = "Render again"
@@ -111,9 +109,9 @@ class SettingsModal(discord.ui.Modal, title='Change render settings'):
             code_message = await interaction.channel.fetch_message(
                 interaction.message.reference.message_id
             )
-            response = render_animation_snippet(
+            response = await render_animation_snippet(
                 code_message,
-                cli_flags=self.CLI_flags.value
+                cli_flags=self.CLI_flags.value.split()
             )
             cli_flags = response.pop("cli_flags")
             if cli_flags:
@@ -132,9 +130,8 @@ def extract_manim_snippets(msg) -> None | str:
     pattern = re.compile(r"```(?:py|python)?([^`]*def construct[^`]*)```")
     return pattern.findall(msg)
 
-def render_animation_snippet(code_message, cli_flags=None) -> discord.File:
-    if cli_flags is None:
-        cli_flags = ""
+async def render_animation_snippet(code_message, cli_flags=[]) -> Dict[str, Any]:
+    dockerclient = aiodocker.Docker()
 
     # theoretically, multiple snippets could be rendered
     # at once. for now, we'll just choose and render the
@@ -160,15 +157,20 @@ def render_animation_snippet(code_message, cli_flags=None) -> discord.File:
 
         try:
             reply_args = None
-            manim_stderr = dockerclient.containers.run(
-                image="manimcommunity/manim:stable",
-                volumes={tmpdirname: {"bind": "/manim/", "mode": "rw"}},
-                command=f"timeout 120 manim -qm --disable_caching --progress_bar=none -o scriptoutput {cli_flags} /manim/script.py",
-                user=os.getuid(),
-                stderr=True,
-                stdout=False,
-                remove=True,
-            )
+            container = await dockerclient.containers.run(
+                config={
+                'Image': "manimcommunity/manim:stable",
+                "Cmd": ["timeout", "120" ,"manim", "--quality=m", "--disable_caching", "--progress_bar=none", "--output_file=scriptoutput", *cli_flags,"/manim/script.py"],
+                "User": "manimuser",
+                "HostConfig": {
+                "Binds": [f"{tmpdirname}:/manim/:rw"],
+                "AutoRemove": True,
+                }})
+            manim_stderr = []
+            # `follow=True` allow to keep the stream open until the container stops
+            async for line in container.log(follow=True, stderr=True):
+                manim_stderr.append(line.rstrip())
+            await dockerclient.close()
             if manim_stderr:
                 raise ManimError(traceback=manim_stderr)
         except Exception as e:
@@ -178,15 +180,16 @@ def render_animation_snippet(code_message, cli_flags=None) -> discord.File:
                     "cli_flags": cli_flags,
                     "attachments": [
                         discord.File(
-                            fp=io.BytesIO(e.traceback),
+                            fp=io.StringIO(e.traceback),
                             filename="error.log",
                         ),
                     ]
                 }
+                return reply_args
             else:
-                if isinstance(e, docker.errors.ContainerError):
+                if isinstance(e, aiodocker.DockerContainerError):
                     # communication with docker yields error
-                    tb = e.stderr
+                    tb = e.message
                 else:
                     # something else (?) went wrong
                     tb = str.encode(traceback.format_exc())
@@ -221,5 +224,5 @@ async def setup(bot: commands.Bot):
     logging.info("RenderCodeblock cog has been added.")
 
 class ManimError(ChildProcessError):
-    def __init__(self,traceback):
-        self.traceback = traceback
+    def __init__(self,traceback: List[str]):
+        self.traceback = "\n".join(traceback)
