@@ -170,7 +170,7 @@ async def render_animation_snippet(code_message, cli_flags=None) -> Dict[str, An
                         *cli_flags,
                         "/manim/script.py",
                     ],
-                    "User": "manimuser",
+                    "User": str(os.getuid()),
                     "HostConfig": {
                         "Binds": [f"{tmpdirname}:/manim/:rw"],
                         "AutoRemove": True,
