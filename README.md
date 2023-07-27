@@ -1,8 +1,15 @@
 # DiscordManimator
 
-A Manim Rendering Bot for Discord. Requires a working `docker` environment: the `manimcommunity/manim:stable` image is used for rendering.
+A Manim Rendering Bot for Discord.
 
+## How to run
 
-### Deploying the Bot
+Prerequisites:
+- Docker dameon running with the `manimcommunity/manim:stable` image pulled
+- `poetry`, a python dependency manager
+- A discord bot token with the `MESSAGE CONTENT` Intent enabled.
 
-After obtaining a Discord bot token, make a new file called config.py in the same directory by copying config_example.py. Edit the new config.py and add your token. The bot is then started by running `python DiscordManimator.py`.
+Deploy:
+- run `poetry install`
+- make a new file `config.py` in this directory based on `config_example.py` including the bot token
+- run `poetry run python DiscordManimator.py`
