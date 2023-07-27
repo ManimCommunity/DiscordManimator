@@ -126,7 +126,10 @@ def extract_manim_snippets(msg) -> None | str:
     return pattern.findall(msg)
 
 
-async def render_animation_snippet(code_message, cli_flags=[]) -> Dict[str, Any]:
+async def render_animation_snippet(code_message, cli_flags=None) -> Dict[str, Any]:
+    if cli_flags is None:
+        cli_flags = []
+
     dockerclient = aiodocker.Docker()
 
     # theoretically, multiple snippets could be rendered
