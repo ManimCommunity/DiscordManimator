@@ -1,0 +1,119 @@
+from manim import *
+
+class Pravopreemstvo(Scene):
+    def construct(self):
+        # Заголовок презентации
+        title = Text("Особенности правового положения \nправопреемника в гражданском процессе", font_size=40, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title))
+        self.wait(2)
+
+        # Слайд 2: Понятие правопреемства
+        self.clear()
+        title2 = Text("Понятие правопреемства", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title2))
+
+        definition = Text("Правопреемство - это переход \nпроцессуальных прав и обязанностей \nот одного лица к другому \nв связи с материальным правопреемством.", font_size=24, font="Arial", line_spacing=1.5).shift(DOWN)
+        self.play(Write(definition))
+        self.wait(3)
+
+        # Слайд 3: Виды правопреемства
+        self.clear()
+        title3 = Text("Виды правопреемства", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title3))
+
+        # Универсальное правопреемство
+        universal = Text("Универсальное:", font_size=28, font="Arial", color=GREEN).shift(UP*2 + LEFT*3)
+        universal_desc = Text("наследование, \nреорганизация юр. лица", font_size=24, font="Arial").next_to(universal, DOWN, aligned_edge=LEFT)
+        self.play(Write(universal), Write(universal_desc))
+
+        # Сингулярное правопреемство
+        singular = Text("Сингулярное:", font_size=28, font="Arial", color=GREEN).shift(UP*2 + RIGHT*3)
+        singular_desc = Text("уступка права требования, \nперевод долга", font_size=24, font="Arial").next_to(singular, DOWN, aligned_edge=LEFT)
+        self.play(Write(singular), Write(singular_desc))
+        self.wait(3)
+
+        # Слайд 4: Основания правопреемства
+        self.clear()
+        title4 = Text("Основания правопреемства", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title4))
+
+        bases = BulletedList(
+            "Смерть гражданина", 
+            "Реорганизация юридического лица", 
+            "Уступка права требования", 
+            "Перевод долга", 
+            font="Arial", font_size=24
+        ).shift(DOWN)
+        self.play(Write(bases))
+        self.wait(3)
+
+        # Слайд 5: Процессуальный статус правопреемника
+        self.clear()
+        title5 = Text("Процессуальный статус \nправопреемника", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title5))
+
+        status_text = Text("Правопреемник приобретает \nвсе права и обязанности \nсвоего предшественника.", font_size=24, font="Arial", line_spacing=1.5).shift(DOWN)
+        self.play(Write(status_text))
+        self.wait(3)
+
+        # Слайд 6: Особенности правопреемства
+        self.clear()
+        title6 = Text("Особенности правопреемства", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title6))
+
+        features = BulletedList(
+            "Возможность вступления на любой стадии процесса",
+            "Обязательность ранее совершенных действий",
+            "Необходимость решения вопроса судом",
+            font="Arial", font_size=24
+        ).shift(DOWN)
+        self.play(Write(features))
+        self.wait(3)
+
+        # Слайд 7: Правопреемство в отдельных видах производств
+        self.clear()
+        title7 = Text("Правопреемство в отдельных \nвидах производств", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title7))
+
+        # Исковое производство
+        iskovoe = Text("Исковое производство:", font_size=28, font="Arial", color=GREEN).shift(UP*2 + LEFT*3)
+        iskovoe_desc = Text("общие правила \nправопреемства", font_size=24, font="Arial").next_to(iskovoe, DOWN, aligned_edge=LEFT)
+        self.play(Write(iskovoe), Write(iskovoe_desc))
+
+        # Особое производство
+        osoboe = Text("Особое производство:", font_size=28, font="Arial", color=GREEN).shift(UP*2 + RIGHT*3)
+        osoboe_desc = Text("ограничения \n(наследственные дела)", font_size=24, font="Arial").next_to(osoboe, DOWN, aligned_edge=LEFT)
+        self.play(Write(osoboe), Write(osoboe_desc))
+        self.wait(3)
+
+        # Слайд 8: Проблемы правопреемства
+        self.clear()
+        title8 = Text("Проблемы правопреемства", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title8))
+
+        problems = BulletedList(
+            "Сложности определения момента перехода прав",
+            "Необходимость защиты прав третьих лиц",
+            "Возможность злоупотребления правом",
+            font="Arial", font_size=24
+        ).shift(DOWN)
+        self.play(Write(problems))
+        self.wait(3)
+
+        # Слайд 9: Судебная практика
+        self.clear()
+        title9 = Text("Судебная практика", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title9))
+
+        practice_text = Text("Судебная практика \nпо вопросам правопреемства \nразнообразна и не всегда однозначна.", font_size=24, font="Arial", line_spacing=1.5).shift(DOWN)
+        self.play(Write(practice_text))
+        self.wait(3)
+
+        # Слайд 10: Заключение
+        self.clear()
+        title10 = Text("Заключение", font_size=36, color=BLUE, font="Arial").to_edge(UP)
+        self.play(Write(title10))
+
+        conclusion = Text("Правопреемство в гражданском процессе - \nважный институт, требующий \nдальнейшего совершенствования.", font_size=24, font="Arial", line_spacing=1.5).shift(DOWN)
+        self.play(Write(conclusion))
+        self.wait(3)
