@@ -1,20 +1,23 @@
-[tool.poetry]
+[project]
 name = "discordmanimator"
 version = "0.1.0"
 description = ""
-authors = ["Manim Community Developers"]
+authors = [{ name = "Manim Community Developers" }]
+requires-python = ">=3.10"
 license = "MIT"
+dependencies = [
+    "discord.py",
+    "python-dotenv",
+    "docker",
+    "aiodocker",
+    "toml>=0.10.2",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-"discord.py" = "^2"
-python-dotenv = "^0.17"
-docker = "^5.0"
-aiodocker = "^0.21.0"
-black = "^23.3.0"
-
-[tool.poetry.dev-dependencies]
+[dependency-groups]
+dev = [
+  "ruff",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
