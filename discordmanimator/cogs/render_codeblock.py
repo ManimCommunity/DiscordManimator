@@ -8,7 +8,7 @@ import tempfile
 import traceback
 import os
 
-import config
+import discordmanimator
 
 from discord.ext import commands
 from pathlib import Path
@@ -146,7 +146,7 @@ async def render_animation_snippet(code_message, cli_flags=None) -> Dict[str, An
         snippet = snippet.split("\n")
 
     prescript = ["from manim import *"]
-    if config.USE_ONLINETEX:
+    if discordmanimator.config.get("USE_ONLINETEX"):
         prescript.append("from manim_onlinetex import *")
     script = prescript + snippet
 

@@ -18,7 +18,7 @@ def create_and_run_bot(config):
         description="Manim Community Discord Bot",
         activity=discord.Game("Animating with Manim"),
         help_command=None,
-        command_prefix=config.get("PREFIX"),
+        command_prefix="!",
         case_insensitive=True,
         strip_after_prefix=True,
         intents=intents,
@@ -35,14 +35,12 @@ def create_and_run_bot(config):
         for extension in os.listdir(Path(__file__).parent / "cogs/"):
             if extension.endswith(".py"):
                 try:
-                    await bot.load_extension(f"cogs.{extension[:-3]}")
+                    await bot.load_extension(f"discordmanimator.cogs.{extension[:-3]}")
                 except Exception:
                     logging.error(f"{extension} couldn't be loaded.")
                     traceback.print_exc()
 
 
-    if __name__ == "__main__":
-        asyncio.run(load_cogs())
+    asyncio.run(load_cogs())
 
-
-    bot.run(config.get("TOKEN"))
+    return bot
