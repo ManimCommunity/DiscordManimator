@@ -7,7 +7,8 @@ pyvenv.cfg
 .env
 share/*
 DiscordManimatorBackup.py
-config.py
+
+config.toml
 
 # Environments
 .env

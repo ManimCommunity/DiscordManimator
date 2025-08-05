@@ -1,0 +1,5 @@
+PREFIX = "!"
+TOKEN = "paste_token_here"
+
+NO_DOCKER = false
+USE_ONLINETEX = false
